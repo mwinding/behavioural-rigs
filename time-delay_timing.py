@@ -1,6 +1,14 @@
 # %%
 # testing time using adaptive interval
 
+# Time.sleep() is accurately quite accurate on the scale of seconds
+# We have experienced that it is inconsistent in practice though, 
+# suggesting there is a delay introduced by camera acquisition. 
+# Below I test what happens when we add a 
+# randomised camera delay between 150-300ms. 
+# I then used an adaptive interval between acquisitions to take 
+# into account the measured delay at each frame.
+
 import time
 import os
 import random
@@ -68,9 +76,9 @@ def adaptive_time_test(expected_interval, duration, simulated_camera_delay, add_
 
 # Example usage
 expected_interval = 1  # Expected interval between captures (in seconds)
-duration = 20  # Capture images for 60 seconds (10 images in this example)
+duration = 20  # Capture images for 20 seconds (20 images in this example)
 delay = 0.2 # 200ms camera delay for testing
-random.uniform(0.1, 0.3)
+
 captures_control = time_test(expected_interval, duration, simulated_camera_delay=0)
 captures_delay = time_test(expected_interval, duration, simulated_camera_delay=delay)
 captures_delay_adaptive = adaptive_time_test(expected_interval, duration, simulated_camera_delay=delay)
