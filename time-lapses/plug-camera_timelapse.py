@@ -14,8 +14,6 @@ duration = 180 # total time of timelapse, in seconds
 interval = 60 # time between acquisitions, in seconds
 num_captures = int(duration / interval) + 1
 
-N = 96 # Total number of images acquired
-
 # Create the output directory if it doesn't exist
 os.makedirs(experiment_name, exist_ok=True)
 
@@ -23,7 +21,7 @@ os.makedirs(experiment_name, exist_ok=True)
 last_capture_time = time.time()
 
 capture_times = []
-for i in range(N):
+for i in range(num_captures):
 
     # acquire image
     r = picam2.capture_request()
@@ -32,7 +30,7 @@ for i in range(N):
     # Calculate the elapsed time from the start of the time-lapse
     elapsed_time = time.time() - start_time
     capture_times.append(elapsed_time)
-    print(f"Captured image {i} of {N} at {elapsed_time:.2f}s")
+    print(f"Captured image {i} of {num_captures} at {elapsed_time:.2f}s")
 
     r.release()
 
