@@ -18,7 +18,7 @@ num_captures = int(duration / interval) + 1
 os.makedirs(experiment_name, exist_ok=True)
 
 # Record the initial time for reference
-last_capture_time = time.time()
+start_time = time.time()
 
 capture_times = []
 for i in range(num_captures):
@@ -38,8 +38,11 @@ for i in range(num_captures):
     expected_next_capture_time = (i + 1) * interval
 
     # Calculate the time to sleep for the next capture
-    sleep_duration = max(0, expected_next_capture_time - elapsed_time)
+    sleep_duration = max(0, expected_next_capture_time - elapsed_time) # if value is negative, 0 will be selected as the max value and passed to time.sleep()
     
     time.sleep(sleep_duration)
 
 picam2.stop()
+
+# save capture_times in case needed in the future, in seconds
+np.savetxt(f'{experiment_name}/{experiment_name}_capture-times.csv', capture_times, delimiter=",")
