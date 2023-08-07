@@ -26,7 +26,7 @@ capture_times = []
 for i in range(num_captures):
 
     if(focus_before_capture==True):
-        success = picam2.auto_focus() # auto-focus before each interval/capture
+        success = picam2.autofocus_cycle() # auto-focus before each interval/capture
 
     # acquire image
     r = picam2.capture_request()
