@@ -7,9 +7,11 @@ import numpy as np
 picam2 = Picamera2()
 picam2.configure("still")
 picam2.start()
+success = picam2.autofocus_cycle() # run an auto-focus cycle
 
-experiment_name ='exp_test_zero_long-cable' # will create a folder with this name
+experiment_name ='exp' # will create a folder with this name
 
+focus_before_capture = True # do you autofocus before each capture, probably won't work for <3s intervals
 duration = 180 # total time of timelapse, in seconds
 interval = 60 # time between acquisitions, in seconds
 num_captures = int(duration / interval) + 1
@@ -22,6 +24,9 @@ start_time = time.time()
 
 capture_times = []
 for i in range(num_captures):
+
+    if(focus_before_capture==True):
+        success = picam2.auto_focus() # auto-focus before each interval/capture
 
     # acquire image
     r = picam2.capture_request()
