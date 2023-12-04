@@ -24,7 +24,7 @@ def time_test(expected_interval, duration, simulated_camera_delay):
     start_time = time.time()
 
     captures = []
-    for i in range(num_captures):
+    for i in range(num_captures + 1):
 
         # simulated camera delay
         time.sleep(simulated_camera_delay)
@@ -32,6 +32,7 @@ def time_test(expected_interval, duration, simulated_camera_delay):
         # Calculate the elapsed time from the start of the time-lapse
         elapsed_time = time.time() - start_time
         captures.append(elapsed_time)
+        print(f"capture at: {elapsed_time:0.5f}")
 
         time.sleep(expected_interval)
 
@@ -47,7 +48,7 @@ def adaptive_time_test(expected_interval, duration, simulated_camera_delay, add_
     start_time = time.time()
 
     captures = []
-    for i in range(num_captures):
+    for i in range(num_captures + 1):
         # Generate a unique filename for each capture
         #filename = f"{output_directory}/image_{i:04d}.jpg"
 
@@ -56,13 +57,16 @@ def adaptive_time_test(expected_interval, duration, simulated_camera_delay, add_
 
         # simulated camera delay
         if(add_noise):
-            simulated_camera_delay = random.uniform(0.75*simulated_camera_delay, 1.5*simulated_camera_delay)
-        time.sleep(simulated_camera_delay)
+            simulated_camera_delay_rand = random.uniform(0.75*simulated_camera_delay, 1.5*simulated_camera_delay)
+            time.sleep(simulated_camera_delay_rand)
+        if(add_noise==False):
+            time.sleep(simulated_camera_delay)
 
         # Calculate the elapsed time from the start of the time-lapse
         elapsed_time = time.time() - start_time
         captures.append(elapsed_time)
-        
+        print(f"capture at: {elapsed_time:0.5f}")
+
         # Calculate the expected time for the next capture
         expected_next_capture_time = (i + 1) * expected_interval
 
