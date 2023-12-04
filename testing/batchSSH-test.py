@@ -45,9 +45,9 @@ folder_path = 'data'
 # Check if a data folder exists already and create it if not
 if not os.path.exists(folder_path):
     os.makedirs(folder_path)
-    print(f"Folder created: {folder_path}")
+    #print(f"Folder created: {folder_path}")
 else:
-    print(f"Folder already exists: {folder_path}")
+    #print(f"Folder already exists: {folder_path}")
 
 # export data on SSH connectivity
 IPs_connected = pd.DataFrame(IPs_connected, columns=['IP', 'SSH_worked'])
