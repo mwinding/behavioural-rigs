@@ -22,7 +22,7 @@ timeout = 5
 
 # record current time to save data
 now = datetime.now()
-now = now.strftime("%Y-%m-%d_%H:%M:%S")
+now = now.strftime("%Y-%m-%d_%H-%M-%S")
 
 # check how many IPs could be connected to
 IPs_connected = []
@@ -45,9 +45,6 @@ folder_path = 'data'
 # Check if a data folder exists already and create it if not
 if not os.path.exists(folder_path):
     os.makedirs(folder_path)
-    #print(f"Folder created: {folder_path}")
-else:
-    #print(f"Folder already exists: {folder_path}")
 
 # export data on SSH connectivity
 IPs_connected = pd.DataFrame(IPs_connected, columns=['IP', 'SSH_worked'])
