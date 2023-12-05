@@ -27,11 +27,10 @@ now = now.strftime("%Y-%m-%d_%H-%M-%S")
 # check how many IPs could be connected to
 IPs_connected = []
 for IP in IPs:
-   ssh_command = f'sshpass -p "{password}" ssh -o ConnectTimeout={timeout} {username}@{IP} echo Connection Successful'
+   ssh_command = f'sshpass -p "{password}" ssh -o ConnectTimeout={timeout} {username}@{IP} echo Connection to {IP} successful'
    result = subprocess.run(ssh_command, shell=True)
 
    if result.returncode == 0:
-      print(f"Connection to {IP} successful")
       result = 1
    else:
       print(f"Failed to connect to {IP}")
@@ -49,6 +48,6 @@ if not os.path.exists(folder_path):
 # export data on SSH connectivity
 IPs_connected = pd.DataFrame(IPs_connected, columns=['IP', 'SSH_worked'])
 frac_connected = sum(IPs_connected.SSH_worked==1)/len(IPs_connected.SSH_worked)
-IPs_connected.to_csv(f'{folder_path}/{now}_IPs-connected_{frac_connected:.0f}%.csv', index=0)
+IPs_connected.to_csv(f'{folder_path}/{now}_IPs-connected_{frac_connected*100:.0f}%.csv', index=0)
 
-print(f'{frac_connected:.1f}% of IPs worked')
+print(f'{frac_connected*100:.1f}% of IPs worked')
