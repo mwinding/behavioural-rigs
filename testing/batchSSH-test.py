@@ -8,8 +8,8 @@
 # Example usage
 # python batchSSH-test.py -p [SSH_PASSWORD] -i /path/to/IP_addresses.csv -s /path/to/save_folder
 # 
-# optional arguments:   -t [timeout for SSH connections in seconds]
-#                       -u [username for SSH connections]
+# optional arguments:   -t [timeout for SSH connections in seconds, default: 10]
+#                       -u [username for SSH connections, default: 'plugcamera']
 
 import subprocess
 import getpass
