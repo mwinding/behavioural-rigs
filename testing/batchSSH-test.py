@@ -31,12 +31,8 @@ args = parser.parse_args()
 password = args.ssh_password
 ip_path = args.ip_path
 save_path = args.save_path
-
-# If the user provides a timeout value, overwrite the default
-if args.timeout is not None:
-    timeout = args.timeout
-if args.username is not None:
-    username = args.username
+timeout = args.timeout
+username = args.username
 
 # pull IP address data
 data = pd.read_csv(ip_path)
