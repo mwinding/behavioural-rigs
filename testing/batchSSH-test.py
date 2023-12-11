@@ -12,7 +12,6 @@
 #                       -u [username for SSH connections, default: 'plugcamera']
 
 import subprocess
-import getpass
 import pandas as pd
 from datetime import datetime
 import os
@@ -51,16 +50,16 @@ now = now.strftime("%Y-%m-%d_%H-%M-%S")
 # check how many IPs could be connected to
 IPs_connected = []
 for i, IP in enumerate(IPs):
-   ssh_command = f'sshpass -p "{password}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout={timeout} {username}@{IP} echo Connection to {IP} successful'
-   result = subprocess.run(ssh_command, shell=True)
+    ssh_command = f'sshpass -p "{password}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout={timeout} {username}@{IP} echo Connection to {IP} successful'    
+    result = subprocess.run(ssh_command, shell=True)
 
-   if result.returncode == 0:
-      result = 1
-   else:
-      print(f"Failed to connect to {IP}")
-      result = 0
+    if result.returncode == 0:
+        result = 1
+    else:
+        print(f"Failed to connect to {IP}")
+        result = 0
 
-   IPs_connected.append([f'pc{rig_num[i]}', IP, result])
+    IPs_connected.append([f'pc{rig_num[i]}', IP, result])
 
 # Check if a save folder exists already and create it if not
 if not os.path.exists(save_path):
