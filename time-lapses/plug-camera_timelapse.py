@@ -40,13 +40,13 @@ success = picam2.autofocus_cycle() # run an auto-focus cycle
 
 num_captures = int(duration / interval) + 1
 
-# Create the output directory if it doesn't exist
-os.makedirs('data', exist_ok=True)
-os.makedirs(f'data/{now}_{rig_name}_{experiment_name}', exist_ok=True)
-
 # record date/time for naming purposes
 now = datetime.now()
 now = now.strftime("%Y-%m-%d_%H-%M-%S")
+
+# Create the output directory if it doesn't exist
+os.makedirs('data', exist_ok=True)
+os.makedirs(f'data/{now}_{rig_name}_{experiment_name}', exist_ok=True)
 
 # Record the initial time to calculate timelapse intervals
 start_time = time.time()
