@@ -78,8 +78,9 @@ print(f'{frac_connected*100:.1f}% of IPs worked')
 for i, IP in enumerate(IPs):
     try:
         print(f'Running command on {IP}')
-        ssh_command = f'sshpass -p {password} rsync -avzh --progress plugcamera@{IP}:data data'
+        ssh_command = f'sshpass -p {password} rsync -avzh --progress --remove-source-files plugcamera@{IP}:data/ data'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ssh_command = f'sshpass -p {password} find plugcamera@{IP}:data/ -type d -empty -delete'
         print(result.stdout.decode())
 
     except subprocess.CalledProcessError as e:
