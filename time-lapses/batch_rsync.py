@@ -27,7 +27,7 @@ save_path = 'SSH_data'
 # note that the default timeout = 10 and default username = 'plugcamera' for SSH connections
 parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH password, path of IP addresses to test, and a save path for the connectivity data')
 parser.add_argument('-p', '--password', dest='ssh_password', action='store', type=str, required=True, help='SSH password')
-parser.add_argument('-i', '--ip-path', dest='ip_path', action='store', type=str, required=True, help='The path to a CSV containing all IP_addresses')
+parser.add_argument('-ip', '--ip-path', dest='ip_path', action='store', type=str, required=True, help='The path to a CSV containing all IP_addresses')
 parser.add_argument('-s', '--save-path', dest='save_path', action='store', type=str, default=save_path, help='The path to save folder for SSH connectivity data')
 parser.add_argument('-t', '--timeout', dest='timeout', action='store', type=int, default=timeout, help='Number of seconds to attempt SSH connection')
 parser.add_argument('-u', '--username', dest='username', action='store', type=str, default=username, help='username for SSH attempts')
