@@ -81,7 +81,7 @@ for i, IP in enumerate(IPs):
         ssh_command = f'sshpass -p {password} rsync -avzh --progress --remove-source-files plugcamera@{IP}:data/ data'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ssh_command = f'sshpass -p {password} find plugcamera@{IP}:data/ -type d -empty -delete'
-        result = subprocess.run(ssh_command, shell=True)
+        result2 = subprocess.run(ssh_command, shell=True)
         print(result.stdout.decode())
 
     except subprocess.CalledProcessError as e:
