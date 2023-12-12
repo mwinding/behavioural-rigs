@@ -75,9 +75,6 @@ for i, IP in enumerate(IPs):
         result = 0
     IPs_connected.append([f'pc{rig_num[i]}', IP, result])
 
-# report the total percent of IPs that could be reached by SSH
-print(f'{frac_connected*100:.1f}% of IPs worked')
-
 # Check if a save folder exists already and create it if not
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -86,6 +83,9 @@ if not os.path.exists(save_path):
 IPs_connected = pd.DataFrame(IPs_connected, columns=['rig_number','IP', 'SSH_worked'])
 frac_connected = sum(IPs_connected.SSH_worked==1)/len(IPs_connected.SSH_worked)
 IPs_connected.to_csv(f'{save_path}/{now}_IPs-connected_{frac_connected*100:.0f}%.csv', index=0)
+
+# report the total percent of IPs that could be reached by SSH
+print(f'{frac_connected*100:.1f}% of IPs worked')
 
 ###################
 # run script on all RPis in batch
