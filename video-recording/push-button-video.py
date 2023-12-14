@@ -66,7 +66,7 @@ while True:
     #short delay, otherwise this code will take up a lot of the Pi's processing power
     time.sleep(0.1)
 
-    if GPIO.input(record_pin)== False:
+    if GPIO.input(record_pin)==False:
         GPIO.output(red_led,GPIO.HIGH) # Red LED ON to indicate the device is recording
         camera.start_preview(alpha=180)
         
@@ -75,7 +75,18 @@ while True:
         
         #Saves the recording into the experimens folder
         camera.start_recording(f"data/{date}_{rig_name}_video-{video_counter}.h264")
-        camera.wait_recording(experiment_duration)
+
+        # implement experiment duration accurately, while allowing the stop button to stop acquisition if desired
+        start_time = time.time()
+        while time.time() - start_time < experiment_duration:
+            camera.wait_recording(0.1)  # Wait for a short period
+            if GPIO.input(stop_pin) == False:
+
+                # Debounce the button, make sure you don't accidentally stop acquisition with a short press
+                time.sleep(0.2)  
+                if GPIO.input(stop_pin) == False:
+                    break  # Stop recording if button is pressed
+
         camera.stop_recording()
         camera.stop_preview()
         GPIO.output(red_led,GPIO.LOW) # Red LED OFF to indicate the recording stopped
@@ -83,5 +94,8 @@ while True:
         video_counter += 1
 
     # Check button if we want to shutdown the Pi safely
-    if GPIO.input(shutdown_pin)== False:
-        shut_down()
+    if GPIO.input(shutdown_pin)==False:
+        # Debounce the button, makes sure you don't accidentally shut down the device with a short press
+        time.sleep(0.2) 
+        if GPIO.input(stop_pin) == False:
+            shut_down()
