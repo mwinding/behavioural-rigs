@@ -91,7 +91,7 @@ print(f'{frac_connected*100:.1f}% of IPs worked')
 # run script on all RPis in batch
 for i, IP in enumerate(IPs):
     try:
-        print(f'Running command on {IP}')
+        print(f'Running command on {rig_num[i]} [{IP}]')
 
         # pull the current time via local system and change Raspberry Pi time to that
         now = datetime.now()
@@ -109,8 +109,8 @@ for i, IP in enumerate(IPs):
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(result.stdout.decode())
     except subprocess.CalledProcessError as e:
-        print(f"Script failed on {IP} with error: {e.stderr.decode()}")
+        print(f"Script failed on {rig_num[i]} [{IP}] with error: {e.stderr.decode()}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred on {rig_num[i]} [{IP}]: {e}")
     except:
-        print(f"Script failed {IP}")
+        print(f"Script failed on {rig_num[i]} [{IP}]")
