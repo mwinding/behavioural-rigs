@@ -80,7 +80,7 @@ for i, IP in enumerate(IPs):
         print(f'Running command on {IP}')
         ssh_command = f'sshpass -p {password} rsync -avzh --progress --remove-source-files plugcamera@{IP}:data/ data'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        ssh_command = f'sshpass -p {password} find plugcamera@{IP}:data/ -type d -empty -delete'
+        ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "find data/ -type d -empty -delete"' # find and delete empty folders after rsync; rsync doesn't delete folders on its own
         result2 = subprocess.run(ssh_command, shell=True)
         print(result.stdout.decode())
 
