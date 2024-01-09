@@ -23,7 +23,6 @@ stop_pin = 22
 red_led = 23
 yellow_led = 24
 
-
 # Suppress warnings
 GPIO.setwarnings(False)
 
