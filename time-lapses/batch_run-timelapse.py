@@ -1,11 +1,11 @@
-## Script to test batch connectivity to many IP addresses at once
+## Script to batch run a timelapse script (plug-camera_timelapse.py) to many IP addresses at once
 # it will output a CSV file with information about connection success
 
 # You will need to install `sshpass`. If using macOS, run the following commands to 1) install homebrew and then 2) install sshpass:
 #  1. /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 #  2. brew install hudochenkov/sshpass/sshpass
 
-# Example usage
+# Example usage (need to be updated)
 # python batchSSH-test.py -p [SSH_PASSWORD] -i /path/to/IP_addresses.csv -s /path/to/save_folder
 #
 # optional arguments:   -t [timeout for SSH connections in seconds, default: 10]
@@ -34,6 +34,7 @@ focus_in_loop = False # do you autofocus before each capture, probably won't wor
 parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH password, path of IP addresses to test, and a save path for the connectivity data')
 parser.add_argument('-p', '--ssh-password', type=str, required=True, help='SSH password')
 parser.add_argument('-ip', '--ip_path', type=str, required=True, help='The path to a CSV containing all IP_addresses')
+parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, default=[], help='list of rig names')
 parser.add_argument('-s', '--save-path', type=str, default=save_path, help='The path to save folder for SSH connectivity data')
 parser.add_argument('-t', '--timeout', type=int, default=timeout, help='Number of seconds to attempt SSH connection')
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
@@ -46,6 +47,7 @@ parser.add_argument('-f', '--focus-in-loop', type=bool, default=focus_in_loop, h
 args = parser.parse_args()
 password = args.ssh_password
 ip_path = args.ip_path
+list_names = args.list_of_rig_names
 save_path = args.save_path
 timeout = args.timeout
 username = args.username
@@ -58,6 +60,13 @@ focus_in_loop = args.focus_in_loop
 data = pd.read_csv(ip_path)
 IPs = data.IP_address
 rig_num = data.rig_number
+
+# only pulls IPs of interest and runs the script on those
+# this is ignored if no list_names is input with `-l` argument; instead all pis are run
+if(len(list_names)>0):
+    data.index = data.rig_number
+    IPs = data.loc[list_names, 'IP_address'].values
+    rig_num = list_names
 
 # record current time for naming the saved data CSV
 now = datetime.now()
@@ -108,6 +117,7 @@ for i, IP in enumerate(IPs):
         ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{run_script}"'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(result.stdout.decode())
+
     except subprocess.CalledProcessError as e:
         print(f"Script failed on {rig_num[i]} [{IP}] with error: {e.stderr.decode()}")
     except Exception as e:
