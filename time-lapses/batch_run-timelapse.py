@@ -32,15 +32,15 @@ focus_in_loop = False # do you autofocus before each capture, probably won't wor
 # pulling user-input variables from command line
 # note that the default timeout = 10 and default username = 'plugcamera' for SSH connections
 parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH password, path of IP addresses to test, and a save path for the connectivity data')
-parser.add_argument('-p', '--password', dest='ssh_password', action='store', type=str, required=True, help='SSH password')
-parser.add_argument('-ip', '--ip-path', dest='ip_path', action='store', type=str, required=True, help='The path to a CSV containing all IP_addresses')
-parser.add_argument('-s', '--save-path', dest='save_path', action='store', type=str, default=save_path, help='The path to save folder for SSH connectivity data')
-parser.add_argument('-t', '--timeout', dest='timeout', action='store', type=int, default=timeout, help='Number of seconds to attempt SSH connection')
-parser.add_argument('-u', '--username', dest='username', action='store', type=str, default=username, help='username for SSH attempts')
-parser.add_argument('-d', '--duration', dest='duration', action='store', type=int, default=duration, help='acquisition duration in seconds')
-parser.add_argument('-i', '--interval', dest='interval', action='store', type=int, default=interval, help='acquisition interval between frames in seconds')
-parser.add_argument('-e', '--experiment_name', dest='experiment_name', action='store', type=str, required=True, default=duration, help='name of experiment, will create a folder')
-parser.add_argument('-f', '--focus-in-loop', dest='focus_in_loop', action='store', type=bool, default=focus_in_loop, help='whether to run an autofocus cycle for each frame acquisition')
+parser.add_argument('-p', '--ssh-password', type=str, required=True, help='SSH password')
+parser.add_argument('-ip', '--ip_path', type=str, required=True, help='The path to a CSV containing all IP_addresses')
+parser.add_argument('-s', '--save-path', type=str, default=save_path, help='The path to save folder for SSH connectivity data')
+parser.add_argument('-t', '--timeout', type=int, default=timeout, help='Number of seconds to attempt SSH connection')
+parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
+parser.add_argument('-d', '--duration', type=int, default=duration, help='acquisition duration in seconds')
+parser.add_argument('-i', '--interval', type=int, default=interval, help='acquisition interval between frames in seconds')
+parser.add_argument('-e', '--experiment-name', type=str, required=True, default=duration, help='name of experiment, will create a folder')
+parser.add_argument('-f', '--focus-in-loop', type=bool, default=focus_in_loop, help='whether to run an autofocus cycle for each frame acquisition')
 
 # ingesting user-input arguments
 args = parser.parse_args()
