@@ -77,7 +77,7 @@ print(f'{frac_connected*100:.1f}% of IPs worked')
 # run rsync in batch
 for i, IP in enumerate(IPs):
     try:
-        print(f'Running command on {IP}')
+        print(f'Running command on {rig_num[i]} [{IP}]')
         ssh_command = f'sshpass -p {password} rsync -avzh --progress --remove-source-files plugcamera@{IP}:data/ data'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "find data/ -type d -empty -delete"' # find and delete empty folders after rsync; rsync doesn't delete folders on its own
@@ -85,8 +85,8 @@ for i, IP in enumerate(IPs):
         print(result.stdout.decode())
 
     except subprocess.CalledProcessError as e:
-        print(f"Script failed on {IP} with error: {e.stderr.decode()}")
+        print(f"Script failed on {rig_num[i]} [{IP}] with error: {e.stderr.decode()}")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred on {rig_num[i]} [{IP}]: {e}")
     except:
-        print(f"Script failed {IP} with unknown error")
+        print(f"Script failed on {rig_num[i]} [{IP}]")
