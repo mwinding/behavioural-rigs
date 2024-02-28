@@ -99,6 +99,7 @@ print(f'{frac_connected*100:.1f}% of IPs worked')
 
 ###################
 # run script on all RPis in batch
+timings = []
 for i, IP in enumerate(IPs):
     try:
         print(f'Running command on {rig_num[i]} [{IP}]')
@@ -116,6 +117,7 @@ for i, IP in enumerate(IPs):
         # pull current time for folder naming
         now = datetime.now()
         now = now.strftime("%Y-%m-%d_%H-%M-%S")
+        timings.append(now)
 
         # actually run the script to acquire timelapse data
         rig_name = f'pc{rig_num[i]}'
@@ -136,6 +138,9 @@ time.sleep(30)
 for i, IP in enumerate(IPs):
     try:
         # check if RPi actually acquired an image
+        now = timings[i]
+        rig_name = f'pc{rig_num[i]}'
+        
         check_script = f'[ -f /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg ] && echo "First image acquired on {rig_name}" || echo "No acquisition detected on {rig_name}!"'
         ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{check_script}"'
         check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
