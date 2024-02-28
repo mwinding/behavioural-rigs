@@ -118,7 +118,7 @@ for i, IP in enumerate(IPs):
         ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{run_script}"'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(result.stdout.decode())
-'''
+        '''
         time.sleep(5)
         # check if RPi actually acquired an image
         check_script = f'[ -f /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg ] && echo "First image acquired on {rig_name}" || echo "No acquisition detected on {rig_name}!"'
@@ -126,7 +126,7 @@ for i, IP in enumerate(IPs):
         check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         feedback = check_result.stdout.decode().strip()
         print(feedback)
-'''
+        '''
     except subprocess.CalledProcessError as e:
         print(f"Script failed on {rig_name} [{IP}] with error: {e.stderr.decode()}")
     except Exception as e:
