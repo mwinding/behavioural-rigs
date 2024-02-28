@@ -24,8 +24,8 @@ parser.add_argument('-d', '--duration', dest='duration', action='store', type=in
 parser.add_argument('-i', '--interval', dest='interval', action='store', type=int, required=True, default=interval, help='acquisition interval between frames in seconds')
 parser.add_argument('-e', '--experiment_name', dest='experiment_name', action='store', type=str, required=True, default=duration, help='name of experiment, will create a folder')
 parser.add_argument('-r', '--rig_name', dest='rig_name', action='store', type=str, required=True, help='name of rig')
-parser.add_argument('-f', '--focus-in-loop', dest='focus_in_loop', action='store', type=bool, required=True, default=focus_in_loop, help='whether to run an autofocus cycle for each frame acquisition')
-parser.add_argument('-t', '--time', dest='time', action=store, type=str,  default=time, help='the current time, for using the batch script') 
+parser.add_argument('-f', '--focus-in-loop', dest='focus_in_loop', action='store', type=bool, default=focus_in_loop, help='whether to run an autofocus cycle for each frame acquisition')
+parser.add_argument('-t', '--time', dest='time', action='store', type=str,  default=time, help='the current time, for using the batch script') 
 
 # ingesting user-input arguments
 args = parser.parse_args()
