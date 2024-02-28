@@ -16,6 +16,7 @@ duration = 518400 # total time of timelapse, in seconds
 interval = 600 # time between acquisitions, in seconds
 experiment_name ='exp' # will create a folder with this name
 focus_in_loop = False # do you autofocus before each capture, probably won't work for <3s intervals
+time = False
 
 # pulling user-input variables from command line
 parser = argparse.ArgumentParser(description='Timelapse script for plug cameras')
@@ -24,6 +25,7 @@ parser.add_argument('-i', '--interval', dest='interval', action='store', type=in
 parser.add_argument('-e', '--experiment_name', dest='experiment_name', action='store', type=str, required=True, default=duration, help='name of experiment, will create a folder')
 parser.add_argument('-r', '--rig_name', dest='rig_name', action='store', type=str, required=True, help='name of rig')
 parser.add_argument('-f', '--focus-in-loop', dest='focus_in_loop', action='store', type=bool, required=True, default=focus_in_loop, help='whether to run an autofocus cycle for each frame acquisition')
+parser.add_argument('-t', '--time', dest='time', action=store, type=str, help='the current time, for using the batch script') 
 
 # ingesting user-input arguments
 args = parser.parse_args()
@@ -32,6 +34,7 @@ interval = args.interval
 experiment_name = args.experiment_name
 focus_in_loop = args.focus_in_loop
 rig_name = args.rig_name
+time = args.time
 
 picam2 = Picamera2()
 picam2.configure("still")
@@ -43,6 +46,10 @@ num_captures = int(duration / interval) + 1
 # record date/time for naming purposes
 now = datetime.now()
 now = now.strftime("%Y-%m-%d_%H-%M-%S")
+
+# check if the current time was input as parameter in batch script; ignore if using without batch script
+if(time!=False):
+    now = time
 
 # Create the output directory if it doesn't exist
 os.makedirs('data', exist_ok=True)

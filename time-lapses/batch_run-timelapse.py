@@ -113,10 +113,17 @@ for i, IP in enumerate(IPs):
         result = subprocess.run(check_time_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # actually run the script to acquire timelapse data
-        run_script = f'nohup python plug-camera_timelapse.py -r pc{rig_num[i]} -e {experiment_name} -d {duration} -i {interval} -f {focus_in_loop} > /dev/null 2>&1 &'
+        run_script = f'nohup python plug-camera_timelapse.py -r pc{rig_num[i]} -e {experiment_name} -d {duration} -i {interval} -f {focus_in_loop} -t {now} > /dev/null 2>&1 &'
         ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{run_script}"'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(result.stdout.decode())
+
+        # check if RPi actually acquired an image
+        check_script = f'[ -f /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg ] && echo "First image acquired on pc{rig_num[i]}" || echo "No acquisition detected on pc{rig_num[i]}!"'
+        ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{check_script}"'
+        check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        feedback = check_result.stdout.decode().strip()
+        print(feedback)
 
     except subprocess.CalledProcessError as e:
         print(f"Script failed on {rig_num[i]} [{IP}] with error: {e.stderr.decode()}")
