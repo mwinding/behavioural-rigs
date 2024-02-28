@@ -113,6 +113,10 @@ for i, IP in enumerate(IPs):
         check_time_command = f'sshpass -p {password} ssh plugcamera@{IP} "date"'
         result = subprocess.run(check_time_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        # pull current time for folder naming
+        now = datetime.now()
+        now = now.strftime("%Y-%m-%d_%H-%M-%S")
+
         # actually run the script to acquire timelapse data
         rig_name = f'pc{rig_num[i]}'
         run_script = f'nohup python plug-camera_timelapse.py -r {rig_name} -e {experiment_name} -d {duration} -i {interval} -f {focus_in_loop} -t {now} > /dev/null 2>&1 &'
@@ -120,7 +124,17 @@ for i, IP in enumerate(IPs):
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(result.stdout.decode())
 
-        time.sleep(30)
+    except subprocess.CalledProcessError as e:
+        print(f"Script failed on {rig_name} [{IP}] with error: {e.stderr.decode()}")
+    except Exception as e:
+        print(f"An error occurred on {rig_name} [{IP}]: {e}")
+    except:
+        print(f"Script failed on {rig_name} [{IP}]")
+
+time.sleep(30)
+
+for i, IP in enumerate(IPs):
+    try:
         # check if RPi actually acquired an image
         check_script = f'[ -f /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg ] && echo "First image acquired on {rig_name}" || echo "No acquisition detected on {rig_name}!"'
         ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{check_script}"'
