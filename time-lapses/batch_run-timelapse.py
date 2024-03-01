@@ -29,6 +29,7 @@ duration = 518400 # total time of timelapse, in seconds
 interval = 600 # time between acquisitions, in seconds
 experiment_name ='exp' # will create a folder with this name
 focus_in_loop = False # do you autofocus before each capture, probably won't work for <3s intervals
+sleep_time = 5 
 
 # pulling user-input variables from command line
 # note that the default timeout = 10 and default username = 'plugcamera' for SSH connections
@@ -43,6 +44,7 @@ parser.add_argument('-d', '--duration', type=int, default=duration, help='acquis
 parser.add_argument('-i', '--interval', type=int, default=interval, help='acquisition interval between frames in seconds')
 parser.add_argument('-e', '--experiment-name', type=str, required=True, default=duration, help='name of experiment, will create a folder')
 parser.add_argument('-f', '--focus-in-loop', type=bool, default=focus_in_loop, help='whether to run an autofocus cycle for each frame acquisition')
+parser.add_argument('-sl', '--sleep', type=str, default=sleep_time, help='sleep time between triggering acquisitions on each RPi')
 
 # ingesting user-input arguments
 args = parser.parse_args()
@@ -56,6 +58,7 @@ duration = args.duration
 interval = args.interval
 experiment_name = args.experiment_name
 focus_in_loop = args.focus_in_loop
+sleep_time = args.sleep_time
 
 # pull IP address data
 data = pd.read_csv(ip_path)
@@ -125,6 +128,8 @@ for i, IP in enumerate(IPs):
         ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{run_script}"'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(result.stdout.decode())
+
+        time.sleep(sleep_time)
 
     except subprocess.CalledProcessError as e:
         print(f"Script failed on {rig_name} [{IP}] with error: {e.stderr.decode()}")
