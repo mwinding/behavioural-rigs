@@ -84,7 +84,7 @@ for i, IP in enumerate(IPs):
     if result.returncode == 0:
         result = 1
     else:
-        print(f"Failed to connect to {IP}")
+        print(f"Failed to connect to 'pc{rig_num[i]}' [{IP}]")
         result = 0
     IPs_connected.append([f'pc{rig_num[i]}', IP, result])
 
