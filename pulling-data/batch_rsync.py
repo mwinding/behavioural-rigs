@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH passw
 parser.add_argument('-p', '--password', dest='ssh_password', action='store', type=str, required=True, help='SSH password')
 parser.add_argument('-ip', '--ip-path', dest='ip_path', action='store', type=str, required=True, help='The path to a CSV containing all IP_addresses')
 parser.add_argument('-s', '--save-path', dest='save_path', action='store', type=str, default=save_path, help='The path to save folder for SSH connectivity data')
-parser.add_argument('-t', '--timeout', dest='timeout', action='store', type=int, default=timeout, help='Number of seconds to attempt SSH connection')
+parser.add_argument('-t', '--timeout', dest='timeout', action='store', type=int, default=timeout, help='Number of seconds to attempt rsync connection')
 parser.add_argument('-u', '--username', dest='username', action='store', type=str, default=username, help='username for SSH attempts')
 
 # ingesting user-input arguments
@@ -52,7 +52,7 @@ now = now.strftime("%Y-%m-%d_%H-%M-%S")
 # check how many IPs could be connected to
 IPs_connected = []
 for i, IP in enumerate(IPs):
-    ssh_command = f'sshpass -p "{password}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout={timeout} {username}@{IP} echo Connection to {IP} successful'
+    ssh_command = f'sshpass -p "{password}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 {username}@{IP} echo Connection to {IP} successful'
     result = subprocess.run(ssh_command, shell=True)
     if result.returncode == 0:
         result = 1
@@ -78,7 +78,7 @@ print(f'{frac_connected*100:.1f}% of IPs worked')
 for i, IP in enumerate(IPs):
     try:
         print(f'Running command on {rig_num[i]} [{IP}]')
-        ssh_command = f'sshpass -p {password} rsync -avzh --progress --timeout=300 --remove-source-files plugcamera@{IP}:data/ data'
+        ssh_command = f'sshpass -p {password} rsync -avzh --progress --timeout={timeout} --remove-source-files plugcamera@{IP}:data/ data'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ssh_command = f'sshpass -p {password} ssh {username}@{IP} "find data/ -mindepth 1 -type d -empty -delete"' # find and delete empty folders after rsync; rsync doesn't delete folders on its own
         result2 = subprocess.run(ssh_command, shell=True)
