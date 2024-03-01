@@ -19,7 +19,7 @@ import os
 import argparse
 
 # default argument values
-timeout = 10
+timeout = 300
 username = 'plugcamera'
 save_path = 'SSH_data'
 
@@ -78,7 +78,7 @@ print(f'{frac_connected*100:.1f}% of IPs worked')
 for i, IP in enumerate(IPs):
     try:
         print(f'Running command on {rig_num[i]} [{IP}]')
-        ssh_command = f'sshpass -p {password} rsync -avzh --progress --remove-source-files plugcamera@{IP}:data/ data'
+        ssh_command = f'sshpass -p {password} rsync -avzh --progress --timeout=300 --remove-source-files plugcamera@{IP}:data/ data'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ssh_command = f'sshpass -p {password} ssh {username}@{IP} "find data/ -mindepth 1 -type d -empty -delete"' # find and delete empty folders after rsync; rsync doesn't delete folders on its own
         result2 = subprocess.run(ssh_command, shell=True)
