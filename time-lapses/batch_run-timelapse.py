@@ -29,7 +29,7 @@ duration = 518400 # total time of timelapse, in seconds
 interval = 600 # time between acquisitions, in seconds
 experiment_name ='exp' # will create a folder with this name
 focus_in_loop = False # do you autofocus before each capture, probably won't work for <3s intervals
-sleep_time = 5 
+sleep_time = 0 
 
 # pulling user-input variables from command line
 # note that the default timeout = 10 and default username = 'plugcamera' for SSH connections
@@ -102,7 +102,7 @@ print(f'{frac_connected*100:.1f}% of IPs worked')
 
 ###################
 # run script on all RPis in batch
-timings = []
+timings = ['']*len(IPs)
 for i, IP in enumerate(IPs):
     try:
         print(f'Running command on {rig_num[i]} [{IP}]')
@@ -120,7 +120,7 @@ for i, IP in enumerate(IPs):
         # pull current time for folder naming
         now = datetime.now()
         now = now.strftime("%Y-%m-%d_%H-%M-%S")
-        timings.append(now)
+        timings[i] = now
 
         # actually run the script to acquire timelapse data
         rig_name = f'pc{rig_num[i]}'
@@ -138,7 +138,7 @@ for i, IP in enumerate(IPs):
     except:
         print(f"Script failed on {rig_name} [{IP}]")
 
-time.sleep(30)
+time.sleep(60)
 
 for i, IP in enumerate(IPs):
     try:
@@ -146,8 +146,8 @@ for i, IP in enumerate(IPs):
         now = timings[i]
         rig_name = f'pc{rig_num[i]}'
         
-        check_script = f'[ -f /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg ] && echo "First image acquired on {rig_name}" || echo "No acquisition detected on {rig_name}!"'
-        ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{check_script}"'
+        check_script = f'test -f /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg && echo "First image acquired on {rig_name}" || echo "No acquisition detected on {rig_name}!"'
+        ssh_command = f'sshpass -p {password} ssh {username}@{IP} "{check_script}"'
         check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         feedback = check_result.stdout.decode().strip()
         print(feedback)
