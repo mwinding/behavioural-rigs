@@ -152,7 +152,7 @@ def list_directory_contents(folder_path):
     return contents
 
 # Path to the parent directory with the folders you want to list
-base_path = f'{save_path}/raw_data'
+base_path = save_path
 directory_contents = list_directory_contents(base_path)
 
 if directory_contents:
@@ -176,9 +176,8 @@ def run_commands_in_directory(directory_path, save_path):
 
 if directory_contents:
     print(f"Processing each directory in {base_path}:")
-    directory_path = os.path.join(base_path, directory)
     for directory in directory_contents:
-        print(f"Processing: {directory_path}")
+        print(f"Processing: {base_path}/{directory}")
         run_commands_in_directory(f'{save_path}/raw_data/{directory}', f'{save_path}/mp4s/{directory}')
 else:
     print("No directories found.")
