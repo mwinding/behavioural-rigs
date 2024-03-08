@@ -107,15 +107,25 @@ else:
     
 # Function to check if the array job is completed
 def is_job_array_completed(job_id):
-    cmd = ["sacct", "-j", f"{job_id}", "--format=State", "--noheader"]
+    # This command now explicitly checks for both the array job and its individual tasks
+    cmd = ["sacct", "-j", f"{job_id}_", "--format=JobID,State", "--noheader"]
     result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
-    states = result.stdout.strip().split('\n')
+    lines = result.stdout.strip().split('\n')
 
-    # Check if any of the states are not in a completed/failed state
-    for state in states:
-        if state not in ["COMPLETED", "FAILED", "CANCELLED"]:
-            return False
-    return True
+    # Initialize flags
+    all_completed = True
+
+    for line in lines:
+        parts = line.split()
+        if len(parts) < 2:
+            continue  # Skip any malformed lines
+
+        job_state = parts[1]
+        if job_state not in ["COMPLETED", "FAILED", "CANCELLED"]:
+            all_completed = False
+            break
+
+    return all_completed
 
 # Wait for the array job to complete
 print(f"Waiting for array job {job_id} to complete...")

@@ -16,4 +16,4 @@ ml FFmpeg/4.1-foss-2018b
 source /camp/apps/eb/software/Anaconda/conda.env.sh
 
 conda activate plugcamera-pipeline
-python transfer-data.py -ip ip_addresses.csv -e test_exp -l 41 42 43
+python -u transfer-data.py -ip ip_addresses.csv -e test_exp -l 41 42 43 > python_output.log 2>&1
