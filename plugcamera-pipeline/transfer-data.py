@@ -128,7 +128,7 @@ def is_job_array_completed(job_id):
 
     return all_completed
 
-time.sleep(30)
+time.sleep(60)
 
 # Wait for the array job to complete
 print(f"Waiting for array job {job_id} to complete...")
@@ -198,8 +198,8 @@ rsync_time = start_transfer - end_transfer
 processing_time = start_processing - end_processing
 
 # Convert duration to total seconds for formatting
-rsync_seconds = int(rsync_duration.total_seconds())
-processing_seconds = int(processing_duration.total_seconds())
+rsync_seconds = int(rsync_time.total_seconds())
+processing_seconds = int(processing_time.total_seconds())
 
 # Format durations as MM:SS
 rsync_time_formatted = f'{rsync_seconds // 60}:{rsync_seconds % 60:02d}'
@@ -208,5 +208,5 @@ processing_time_formatted = f'{processing_seconds // 60}:{processing_seconds % 6
 print('')
 print('')
 print('')
-print(f'Rsync time: {rsync_time}')
-print(f'Processing time: {processing_time}')
+print(f'Rsync time: {rsync_time_formatted}')
+print(f'Processing time: {processing_time_formatted}')
