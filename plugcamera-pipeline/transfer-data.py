@@ -54,7 +54,7 @@ shell_script_content = f"""#!/bin/bash
 #SBATCH --array=1-{len(IPs)}
 #SBATCH --partition=cpu
 #SBATCH --mem=10G
-#SBATCH --time=08:00:00
+#SBATCH --time=01:00:00
 
 # convert ip_string to shell array
 IFS=' ' read -r -a ip_array <<< "{IPs_string}"
@@ -69,12 +69,16 @@ ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
 """
 print(shell_script_content)
 
-# Prepare the command to echo the shell script content and pipe it into `sbatch`
-command = f'echo "{shell_script_content}" | sbatch'
-print(command)
+# Create a temporary file to hold the SBATCH script
+with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_script:
+    tmp_script.write(shell_script_content)
+    tmp_script_path = tmp_script.name
 
-# Execute the command. Note: shell=True can be security-sensitive, ensure `shell_script_content` is trusted.
-process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+# Submit the SBATCH script
+process = subprocess.run(["sbatch", tmp_script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+# Optionally, delete the temporary file after submission
+os.unlink(tmp_script_path)
 
 # Check the result
 if process.returncode == 0:
