@@ -56,6 +56,7 @@ if not os.path.exists(f'{save_path}/mp4s'):
 
 #########################
 #### TRANSFER DATA ######
+# transfer raw data from RPis to NEMO
 
 start_transfer = datetime.now()
 
@@ -144,7 +145,7 @@ while not is_job_array_completed(job_id):
     print(f"Array job {job_id} is still running. Waiting...")
     time.sleep(30)  # Check every 30 seconds
 
-print(f"Array job {job_id} has completed.")
+print(f"Array job {job_id} has completed.\n")
 end_transfer = datetime.now()
 
 ###############################
@@ -191,7 +192,7 @@ else:
 if directory_contents:
     print(f"Processing each directory in {base_path}:")
     for directory in directory_contents:
-        print(f"Processing: {base_path}/{directory}")
+        print(f"\nProcessing: {base_path}/{directory}")
         run_commands_in_directory(f'{save_path}/raw_data/{directory}', f'{save_path}/mp4s/{directory}')
 else:
     print("No directories found.")
@@ -216,10 +217,8 @@ rsync_time_formatted = f'{rsync_seconds // 60}:{rsync_seconds % 60:02d}'
 processing_time_formatted = f'{processing_seconds // 60}:{processing_seconds % 60:02d}'
 total_time_formatted = f'{total_seconds // 60}:{total_seconds % 60:02d}'
 
-print('')
-print('')
-print('')
+
+print('\n\n\n')
 print(f'Rsync time: {rsync_time_formatted}')
 print(f'Processing time: {processing_time_formatted}')
-print('')
-print(f'Total time: {total_time_formatted}')
+print(f'\nTotal time: {total_time_formatted}')
