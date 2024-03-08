@@ -128,6 +128,8 @@ def is_job_array_completed(job_id):
 
     return all_completed
 
+time.sleep(30)
+
 # Wait for the array job to complete
 print(f"Waiting for array job {job_id} to complete...")
 while not is_job_array_completed(job_id):
@@ -177,8 +179,6 @@ if directory_contents:
         print(item)
 else:
     print("No contents found.")
-
-
 
 if directory_contents:
     print(f"Processing each directory in {base_path}:")
