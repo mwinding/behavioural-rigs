@@ -152,7 +152,7 @@ def list_directory_contents(folder_path):
     return contents
 
 # Path to the parent directory with the folders you want to list
-base_path = save_path
+base_path = f'{save_path}/raw_data'
 directory_contents = list_directory_contents(base_path)
 
 if directory_contents:
