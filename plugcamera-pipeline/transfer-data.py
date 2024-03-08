@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import argparse
 import time
+import tempfile
 
 # default argument values
 username = 'plugcamera'
