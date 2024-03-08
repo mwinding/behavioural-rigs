@@ -41,8 +41,18 @@ if(len(list_names)>0):
     rig_num = list_names
 
 # Check if a save folder exists already and create it if not
+# create subfolders
 if not os.path.exists(save_path):
     os.makedirs(save_path)
+
+if not os.path.exists(f'{save_path}/raw_data'):
+    os.makedirs(save_path)
+
+if not os.path.exists(f'{save_path}/mp4s'):
+    os.makedirs(save_path)
+
+#########################
+#### TRANSFER DATA ######
 
 len(IPs)
 IPs_string = ' '.join(IPs)
@@ -65,7 +75,7 @@ ip_var="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 echo $ip_var
 
-rsync -avzh --progress --remove-source-files plugcamera@$ip_var:/home/plugcamera/data/ /camp/lab/windingm/data/instruments/behavioural_rigs/plugcamera/{experiment_name}
+rsync -avzh --progress --remove-source-files plugcamera@$ip_var:/home/plugcamera/data {save_path}/raw_data
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
 """
 print(shell_script_content)
@@ -88,3 +98,50 @@ if process.returncode == 0:
 else:
     print("Failed to submit job")
     print(process.stderr)
+
+###############################
+###### PROCESS DATA ###########
+# convert to .mp4 and crop
+# adapted from Lucy Kimbley
+
+def list_directory_contents(folder_path):
+    # Check if the given path is a directory
+    if not os.path.isdir(folder_path):
+        print(f"{folder_path} is not a valid directory path.")
+        return
+    
+    # Get the list of items in the directory
+    contents = os.listdir(folder_path)
+    
+    return contents
+
+# Path to the parent directory with the folders you want to list
+base_path = f'{save_path}/raw_data'
+directory_contents = list_directory_contents(base_path)
+
+if directory_contents:
+    print(f"Contents of {base_path}:")
+    for item in directory_contents:
+        print(item)
+else:
+    print("No contents found.")
+
+# generate and crop mp4 videos for each directory
+def run_commands_in_directory(directory_path, save_path):
+    # Define the commands
+    generate_mp4 = f"ffmpeg -framerate 7 -pattern_type glob -i '{directory_path}/*.jpg' -c:v libx264 -pix_fmt yuv420p {directory_path}_raw.mp4"
+    crop_mp4 = f"ffmpeg -i {directory_path}_raw.mp4 -filter:v 'crop=1750:1750:1430:360' {save_path}.mp4"
+    remove_uncropped = f"rm {directory_path}_raw.mp4"
+
+    # Run the commands using subprocess
+    subprocess.run(generate_mp4, shell=True)
+    subprocess.run(crop_mp4, shell=True)
+    subprocess.run(remove_uncropped, shell=True)
+
+if directory_contents:
+    print(f"Processing each directory in {base_path}:")
+    for directory in directory_contents:
+        print(f"Processing: {directory_path}")
+        run_commands_in_directory(f'{save_path}/raw_data/{directory}', f'{save_path}/mp4s/{directory}')
+else:
+    print("No directories found.")
