@@ -54,6 +54,8 @@ if not os.path.exists(f'{save_path}/mp4s'):
 #########################
 #### TRANSFER DATA ######
 
+start_transfer = datetime.now()
+
 len(IPs)
 IPs_string = ' '.join(IPs)
 
@@ -79,7 +81,6 @@ rsync -avzh --progress plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
 """
 # removed `--remove-source-files` for testing
-print(shell_script_content)
 
 # Create a temporary file to hold the SBATCH script
 with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_script:
@@ -134,11 +135,14 @@ while not is_job_array_completed(job_id):
     time.sleep(30)  # Check every 30 seconds
 
 print(f"Array job {job_id} has completed.")
+end_transfer = datetime.now()
 
 ###############################
 ###### PROCESS DATA ###########
 # convert to .mp4 and crop
 # adapted from Lucy Kimbley
+
+start_processing = datetime.now()
 
 def list_directory_contents(folder_path):
     # Check if the given path is a directory
@@ -150,17 +154,6 @@ def list_directory_contents(folder_path):
     contents = os.listdir(folder_path)
     
     return contents
-
-# Path to the parent directory with the folders you want to list
-base_path = f'{save_path}/raw_data'
-directory_contents = list_directory_contents(base_path)
-
-if directory_contents:
-    print(f"Contents of {base_path}:")
-    for item in directory_contents:
-        print(item)
-else:
-    print("No contents found.")
 
 # generate and crop mp4 videos for each directory
 def run_commands_in_directory(directory_path, save_path):
@@ -174,6 +167,19 @@ def run_commands_in_directory(directory_path, save_path):
     subprocess.run(crop_mp4, shell=True)
     subprocess.run(remove_uncropped, shell=True)
 
+# Path to the parent directory with the folders you want to list
+base_path = f'{save_path}/raw_data'
+directory_contents = list_directory_contents(base_path)
+
+if directory_contents:
+    print(f"Contents of {base_path}:")
+    for item in directory_contents:
+        print(item)
+else:
+    print("No contents found.")
+
+
+
 if directory_contents:
     print(f"Processing each directory in {base_path}:")
     for directory in directory_contents:
@@ -181,3 +187,26 @@ if directory_contents:
         run_commands_in_directory(f'{save_path}/raw_data/{directory}', f'{save_path}/mp4s/{directory}')
 else:
     print("No directories found.")
+
+end_processing = datetime.now()
+
+################################
+### HOW LONG DID IT TAKE? ######
+
+# calculate script time
+rsync_time = start_transfer - end_transfer
+processing_time = start_processing - end_processing
+
+# Convert duration to total seconds for formatting
+rsync_seconds = int(rsync_duration.total_seconds())
+processing_seconds = int(processing_duration.total_seconds())
+
+# Format durations as MM:SS
+rsync_time_formatted = f'{rsync_seconds // 60}:{rsync_seconds % 60:02d}'
+processing_time_formatted = f'{processing_seconds // 60}:{processing_seconds % 60:02d}'
+
+print('')
+print('')
+print('')
+print(f'Rsync time: {rsync_time}')
+print(f'Processing time: {processing_time}')
