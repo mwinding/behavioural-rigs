@@ -10,6 +10,7 @@ import tempfile
 # default argument values
 username = 'plugcamera'
 ip_path = 'ip_addresses.csv'
+remove_files = True
 
 # pulling user-input variables from command line
 parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH password, path of IP addresses to test, and a save path for the connectivity data')
@@ -17,6 +18,7 @@ parser.add_argument('-ip', '--ip_path', type=str, required=True, default=ip_path
 parser.add_argument('-e', '--experiment-name', type=str, required=True, help='name of experiment, will create a folder')
 parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, default=[], help='list of rig names')
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
+parser.add_argument('-r', '--remove-files', type=bool, default=remove_files, help='whether to remove files from RPi source')
 
 # ingesting user-input arguments
 args = parser.parse_args()
@@ -24,6 +26,7 @@ ip_path = args.ip_path
 list_names = args.list_of_rig_names
 username = args.username
 experiment_name = args.experiment_name
+remove_files = args.remove_files
 
 # save-path on NEMO
 save_path = f'/camp/lab/windingm/data/instruments/behavioural_rigs/plugcamera/{experiment_name}'
@@ -59,6 +62,12 @@ start_transfer = datetime.now()
 len(IPs)
 IPs_string = ' '.join(IPs)
 
+# remove source files from RPi or not, is a user-input parameter
+if(remove_files==True):
+    remove_files = '--remove-source-files ' # need the space for command line syntax
+if(remove_files==False):
+    remove_files = ''
+
 # shell script content
 shell_script_content = f"""#!/bin/bash
 #SBATCH --job-name=rsync_pis
@@ -77,10 +86,9 @@ ip_var="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 echo $ip_var
 
-rsync -avzh --progress plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
+rsync -avzh --progress {remove_files}plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
 """
-# removed `--remove-source-files` for testing
 
 # Create a temporary file to hold the SBATCH script
 with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_script:
@@ -194,19 +202,24 @@ end_processing = datetime.now()
 ### HOW LONG DID IT TAKE? ######
 
 # calculate script time
-rsync_time = start_transfer - end_transfer
-processing_time = start_processing - end_processing
+rsync_time = end_transfer - start_transfer
+processing_time = end_processing - start_processing
+total_time = end_processing - start_transfer
 
 # Convert duration to total seconds for formatting
 rsync_seconds = int(rsync_time.total_seconds())
 processing_seconds = int(processing_time.total_seconds())
+total_seconds = int(total_time.total_seconds())
 
 # Format durations as MM:SS
 rsync_time_formatted = f'{rsync_seconds // 60}:{rsync_seconds % 60:02d}'
 processing_time_formatted = f'{processing_seconds // 60}:{processing_seconds % 60:02d}'
+total_time_formatted = f'{total_seconds // 60}:{total_seconds % 60:02d}'
 
 print('')
 print('')
 print('')
 print(f'Rsync time: {rsync_time_formatted}')
 print(f'Processing time: {processing_time_formatted}')
+print('')
+print(f'Total time: {total_time_formatted}')
