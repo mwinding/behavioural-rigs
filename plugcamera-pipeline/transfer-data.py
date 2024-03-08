@@ -1,6 +1,5 @@
 
 import subprocess
-import getpass
 import pandas as pd
 from datetime import datetime
 import os
@@ -9,11 +8,12 @@ import time
 
 # default argument values
 username = 'plugcamera'
+ip_path = 'ip_addresses.csv'
 
 # pulling user-input variables from command line
 parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH password, path of IP addresses to test, and a save path for the connectivity data')
 parser.add_argument('-p', '--ssh-password', type=str, required=True, help='SSH password')
-parser.add_argument('-ip', '--ip_path', type=str, required=True, help='The path to a CSV containing all IP_addresses')
+parser.add_argument('-ip', '--ip_path', type=str, required=True, default=ip_path, help='The path to a CSV containing all IP_addresses')
 parser.add_argument('-e', '--experiment-name', type=str, required=True, help='name of experiment, will create a folder')
 parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, default=[], help='list of rig names')
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
