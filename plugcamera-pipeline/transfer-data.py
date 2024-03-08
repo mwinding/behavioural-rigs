@@ -75,9 +75,10 @@ ip_var="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 echo $ip_var
 
-rsync -avzh --progress --remove-source-files plugcamera@$ip_var:/home/plugcamera/data {save_path}/raw_data
+rsync -avzh --progress plugcamera@$ip_var:/home/plugcamera/data {save_path}/raw_data
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
 """
+# removed `--remove-source-files` for testing
 print(shell_script_content)
 
 # Create a temporary file to hold the SBATCH script
@@ -91,13 +92,38 @@ process = subprocess.run(["sbatch", tmp_script_path], stdout=subprocess.PIPE, st
 # Optionally, delete the temporary file after submission
 os.unlink(tmp_script_path)
 
-# Check the result
+# Check the result and extract job ID from the output
 if process.returncode == 0:
-    print("Successfully submitted job")
+    job_id_output = process.stdout.strip()
+    print(job_id_output)
+
+    job_id = job_id_output.split()[-1]
+
     print(process.stdout)
 else:
     print("Failed to submit job")
     print(process.stderr)
+    exit(1)
+    
+# Function to check if the array job is completed
+def is_job_array_completed(job_id):
+    cmd = ["sacct", "-j", f"{job_id}", "--format=State", "--noheader"]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+    states = result.stdout.strip().split('\n')
+
+    # Check if any of the states are not in a completed/failed state
+    for state in states:
+        if state not in ["COMPLETED", "FAILED", "CANCELLED"]:
+            return False
+    return True
+
+# Wait for the array job to complete
+print(f"Waiting for array job {job_id} to complete...")
+while not is_job_array_completed(job_id):
+    print(f"Array job {job_id} is still running. Waiting...")
+    time.sleep(30)  # Check every 30 seconds
+
+print(f"Array job {job_id} has completed.")
 
 ###############################
 ###### PROCESS DATA ###########
