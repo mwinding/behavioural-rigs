@@ -67,9 +67,11 @@ echo $ip_var
 rsync -avzh --progress --remove-source-files plugcamera@$ip_var:/home/plugcamera/data/ /camp/lab/windingm/data/instruments/behavioural_rigs/plugcamera/data/2024-02-27_3hr-staging
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
 """
+print(shell_script_content)
 
 # Prepare the command to echo the shell script content and pipe it into `sbatch`
 command = f'echo "{shell_script_content}" | sbatch'
+print(command)
 
 # Execute the command. Note: shell=True can be security-sensitive, ensure `shell_script_content` is trusted.
 process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
