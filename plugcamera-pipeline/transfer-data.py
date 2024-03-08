@@ -47,8 +47,7 @@ len(IPs)
 IPs_string = ' '.join(IPs)
 
 # shell script content
-shell_script_content = f"""
-#!/bin/bash
+shell_script_content = f"""#!/bin/bash
 #SBATCH --job-name=rsync_pis
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
