@@ -43,13 +43,13 @@ if(len(list_names)>0):
 # Check if a save folder exists already and create it if not
 # create subfolders
 if not os.path.exists(save_path):
-    os.makedirs(save_path)
+    os.makedirs(save_path, exist_ok=True)
 
 if not os.path.exists(f'{save_path}/raw_data'):
-    os.makedirs(save_path)
+    os.makedirs(f'{save_path}/raw_data', exist_ok=True)
 
 if not os.path.exists(f'{save_path}/mp4s'):
-    os.makedirs(save_path)
+    os.makedirs(f'{save_path}/mp4s', exist_ok=True)
 
 #########################
 #### TRANSFER DATA ######
