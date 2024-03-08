@@ -176,6 +176,7 @@ def run_commands_in_directory(directory_path, save_path):
 
 if directory_contents:
     print(f"Processing each directory in {base_path}:")
+    directory_path = os.path.join(base_path, directory)
     for directory in directory_contents:
         print(f"Processing: {directory_path}")
         run_commands_in_directory(f'{save_path}/raw_data/{directory}', f'{save_path}/mp4s/{directory}')
