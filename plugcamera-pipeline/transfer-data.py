@@ -75,7 +75,7 @@ ip_var="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 echo $ip_var
 
-rsync -avzh --progress plugcamera@$ip_var:/home/plugcamera/data {save_path}/raw_data
+rsync -avzh --progress plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
 """
 # removed `--remove-source-files` for testing
