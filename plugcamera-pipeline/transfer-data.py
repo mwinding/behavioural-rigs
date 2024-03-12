@@ -138,7 +138,9 @@ def is_job_array_completed(job_id):
 
     return all_completed
 
-time.sleep(60)
+seconds = 60
+print(f"Wait for {seconds} seconds before checking if array job has completed")
+time.sleep(seconds)
 
 # Wait for the array job to complete
 print(f"Waiting for array job {job_id} to complete...")
@@ -148,7 +150,7 @@ while not is_job_array_completed(job_id):
 
 print(f"Array job {job_id} has completed.\n")
 end_transfer = datetime.now()
-'''
+
 ###############################
 ###### PROCESS DATA ###########
 # convert to .mp4 and crop
@@ -223,4 +225,3 @@ print('\n\n\n')
 print(f'Rsync time: {rsync_time_formatted}')
 print(f'Processing time: {processing_time_formatted}')
 print(f'\nTotal time: {total_time_formatted}')
-'''
