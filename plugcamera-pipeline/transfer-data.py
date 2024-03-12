@@ -77,7 +77,7 @@ shell_script_content = f"""#!/bin/bash
 #SBATCH --array=1-{len(IPs)}
 #SBATCH --partition=cpu
 #SBATCH --mem=10G
-#SBATCH --time=01:00:00
+#SBATCH --time=08:00:00
 
 # convert ip_string to shell array
 IFS=' ' read -r -a ip_array <<< "{IPs_string}"
