@@ -117,8 +117,7 @@ else:
     
 # Function to check if the array job is completed
 def is_job_array_completed(job_id):
-    # This command now explicitly checks for both the array job and its individual tasks
-    cmd = ["sacct", "-j", f"{job_id}_", "--format=JobID,State", "--noheader"]
+    cmd = ["sacct", "-j", f"{job_id}", "--format=JobID,State", "--noheader"]
     result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
     lines = result.stdout.strip().split('\n')
 
@@ -130,10 +129,12 @@ def is_job_array_completed(job_id):
         if len(parts) < 2:
             continue  # Skip any malformed lines
 
-        job_state = parts[1]
-        if job_state not in ["COMPLETED", "FAILED", "CANCELLED"]:
-            all_completed = False
-            break
+        # Extract and ignore array job steps (e.g., "12345678_1") for simplicity
+        job_id_part, job_state = parts[0], parts[1]
+        if "_" in job_id_part and not job_id_part.endswith("batch"):  # Focus on array tasks excluding batch job steps
+            if job_state not in ["COMPLETED", "FAILED", "CANCELLED"]:
+                all_completed = False
+                break
 
     return all_completed
 
@@ -147,7 +148,7 @@ while not is_job_array_completed(job_id):
 
 print(f"Array job {job_id} has completed.\n")
 end_transfer = datetime.now()
-
+'''
 ###############################
 ###### PROCESS DATA ###########
 # convert to .mp4 and crop
@@ -222,3 +223,4 @@ print('\n\n\n')
 print(f'Rsync time: {rsync_time_formatted}')
 print(f'Processing time: {processing_time_formatted}')
 print(f'\nTotal time: {total_time_formatted}')
+'''
