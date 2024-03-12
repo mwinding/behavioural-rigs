@@ -10,7 +10,7 @@ import tempfile
 # default argument values
 username = 'plugcamera'
 ip_path = 'ip_addresses.csv'
-remove_files = True
+remove_files = False
 
 # pulling user-input variables from command line
 parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH password, path of IP addresses to test, and a save path for the connectivity data')

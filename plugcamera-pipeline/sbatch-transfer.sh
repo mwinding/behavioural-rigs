@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # usage: when transferring from plugcameras 50, 51, and 52 for example, use the following:
-# sbatch --export=EXP_NAME="test_exp" --export=RIG_NUMBERS="50 51 52" sbatch-transfer.sh
+# sbatch --export=EXP_NAME="test_exp" --export=RIG_NUMBERS="50 51 52" --export=REMOVE="False" sbatch-transfer.sh
 
 #SBATCH --job-name=pc_transfer
 #SBATCH --ntasks=1
@@ -20,4 +20,4 @@ source /camp/apps/eb/software/Anaconda/conda.env.sh
 
 conda activate plugcamera-pipeline
 #python -u transfer-data.py -ip ip_addresses.csv -e test_exp -l 41 42 43 > transfer_python-output.log 2>&1
-python -u transfer-data.py -ip ip_addresses.csv -e $EXP_NAME -l $RIG_NUMBERS > python_output.log 2>&1
+python -u transfer-data.py -ip ip_addresses.csv -e $EXP_NAME -l $RIG_NUMBERS -r $REMOVE > python_output.log 2>&1
