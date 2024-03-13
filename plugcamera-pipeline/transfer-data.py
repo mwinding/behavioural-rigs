@@ -88,11 +88,12 @@ ip_var="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
 echo $ip_var
 
 rsync -avzh --progress {remove_files}plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
+rsync_status=$?
 
-# Check the exit status of the rsync command
-if [ $? -ne 0 ]; then
-    echo "rsync command failed with exit code $?. Exiting."
-    exit 1
+# check rsync status and output file if it fails to allow user to easily notice
+if [ $rsync_status -ne 0 ]; then
+    # If rsync fails, create a file indicating failure
+    echo "Rsync failed for IP: $ip_var" > "FAILED-rsync_IP-${ip_var}.out"
 fi
 
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
