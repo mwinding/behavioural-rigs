@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # usage: when transferring from plugcameras 50, 51, and 52 for example, use the following:
-# sbatch --export=EXP_NAME=test_exp, RIG_NUMBERS="50 51 52", REMOVE=False sbatch-transfer.sh
+# sbatch --export=EXP_NAME=test_exp,RIG_NUMBERS="50 51 52",REMOVE=False sbatch-transfer.sh
 
 #SBATCH --job-name=pc_transfer
 #SBATCH --ntasks=1
