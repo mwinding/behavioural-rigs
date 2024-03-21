@@ -42,7 +42,7 @@ parser.add_argument('-t', '--timeout', type=int, default=timeout, help='Number o
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
 parser.add_argument('-d', '--duration', type=int, default=duration, help='acquisition duration in seconds')
 parser.add_argument('-i', '--interval', type=int, default=interval, help='acquisition interval between frames in seconds')
-parser.add_argument('-e', '--experiment-name', type=str, required=True, default=duration, help='name of experiment, will create a folder')
+parser.add_argument('-e', '--experiment-name', type=str, required=True, default=experiment_name, help='name of experiment, will create a folder')
 parser.add_argument('-f', '--focus-in-loop', type=bool, default=focus_in_loop, help='whether to run an autofocus cycle for each frame acquisition')
 parser.add_argument('-sl', '--sleep-time', type=int, default=sleep_time, help='sleep time between triggering acquisitions on each RPi')
 
@@ -77,6 +77,8 @@ now = datetime.now()
 now = now.strftime("%Y-%m-%d_%H-%M-%S")
 
 # check how many IPs could be connected to
+
+print('\nTESTING SSH CONNECTIVITY...')
 IPs_connected = []
 for i, IP in enumerate(IPs):
     ssh_command = f'sshpass -p "{password}" ssh -o StrictHostKeyChecking=no -o ConnectTimeout={timeout} {username}@{IP} echo Connection to {IP} successful'
@@ -98,24 +100,33 @@ frac_connected = sum(IPs_connected.SSH_worked==1)/len(IPs_connected.SSH_worked)
 IPs_connected.to_csv(f'{save_path}/{now}_IPs-connected_{frac_connected*100:.0f}%.csv', index=0)
 
 # report the total percent of IPs that could be reached by SSH
-print(f'{frac_connected*100:.1f}% of IPs worked')
+print(f'{frac_connected*100:.1f}% of IPs worked\n')
 
 ###################
 # run script on all RPis in batch
+print('RUNNING TIMELAPSES...')
 timings = ['']*len(IPs)
 for i, IP in enumerate(IPs):
     try:
-        print(f'Running command on {rig_num[i]} [{IP}]')
+        print(f'Ran command on {rig_num[i]} [{IP}]')
 
         # pull the current time via local system and change Raspberry Pi time to that
         now = datetime.now()
         now = now.strftime("%m%d%H%M%Y.%S")
-        time_command = f'sshpass -p {password} ssh plugcamera@{IP} "sudo date {now}"'
+        time_command = f'sshpass -p {password} ssh {username}@{IP} "sudo date {now}"'
         result = subprocess.run(time_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        #print(f'Changed time to {now} on {rig_num[i]} [{IP}]')
+
         # check if the date actually changed and print the changed date
-        check_time_command = f'sshpass -p {password} ssh plugcamera@{IP} "date"'
+        check_time_command = f'sshpass -p {password} ssh {username}@{IP} "date"'
         result = subprocess.run(check_time_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # delete any old log files
+        delete_log = f'sshpass -p {password} ssh {username}@{IP} "rm -f python.log"'
+        subprocess.run(delete_log, shell=True, check=True)
+
+        #print(f'Time is now {result.stdout}')
 
         # pull current time for folder naming
         now = datetime.now()
@@ -124,10 +135,9 @@ for i, IP in enumerate(IPs):
 
         # actually run the script to acquire timelapse data
         rig_name = f'pc{rig_num[i]}'
-        run_script = f'nohup python plug-camera_timelapse.py -r {rig_name} -e {experiment_name} -d {duration} -i {interval} -f {focus_in_loop} -t {now} > /dev/null 2>&1 &'
+        run_script = f'nohup python plug-camera_timelapse.py -r {rig_name} -e {experiment_name} -d {duration} -i {interval} -f {focus_in_loop} -t {now} > python.log 2>&1 &'
         ssh_command = f'sshpass -p {password} ssh plugcamera@{IP} "{run_script}"'
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(result.stdout.decode())
 
         time.sleep(sleep_time)
 
@@ -138,19 +148,31 @@ for i, IP in enumerate(IPs):
     except:
         print(f"Script failed on {rig_name} [{IP}]")
 
-time.sleep(60)
+wait = 120
+print(f'{wait}-second pause...\n')
+time.sleep(wait)
 
+print('TESTING WHETHER TIMELAPSES STARTED...')
 for i, IP in enumerate(IPs):
     try:
         # check if RPi actually acquired an image
         now = timings[i]
         rig_name = f'pc{rig_num[i]}'
         
-        check_script = f'test -f /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg && echo "First image acquired on {rig_name}" || echo "No acquisition detected on {rig_name}!"'
+        check_script = f'ls /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg >/dev/null 2>&1 && echo "First image acquired on {rig_name} [{IP}]" || echo "No acquisition detected on {rig_name} [{IP}]!"'
         ssh_command = f'sshpass -p {password} ssh {username}@{IP} "{check_script}"'
         check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         feedback = check_result.stdout.decode().strip()
+        #print(f'Checking: /home/plugcamera/data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image00000.jpg')
         print(feedback)
+
+        if(feedback==f"No acquisition detected on {rig_name} [{IP}]!"):
+            ssh_command = f'sshpass -p {password} ssh {username}@{IP} cat python.log'
+            check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = check_result.stdout.decode()
+            for line in output.splitlines(): 
+                print(f'\t{line}')
+            print('')
 
     except subprocess.CalledProcessError as e:
         print(f"Script failed on {rig_name} [{IP}] with error: {e.stderr.decode()}")
@@ -158,3 +180,5 @@ for i, IP in enumerate(IPs):
         print(f"An error occurred on {rig_name} [{IP}]: {e}")
     except:
         print(f"Script failed on {rig_name} [{IP}]")
+
+print('')
