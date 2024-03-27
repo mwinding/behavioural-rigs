@@ -18,7 +18,7 @@ ml Anaconda3/2023.09-0
 source /camp/apps/eb/software/Anaconda/conda.env.sh
 
 conda activate sleap
-for video in "$VIDEOS_PATH"/*.jpg
+for video in "$VIDEOS_PATH"/*.mp4
 do
   sleap-track "$video" -m "$CENTROID_PATH" -m "$CENTERED_PATH"
   #sleap-track "$video" -m 240306_235934.centroid -m 240306_235934.centered_instance
