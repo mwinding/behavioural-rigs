@@ -26,4 +26,4 @@ conda activate plugcamera-pipeline
 IFS=' ' read -r -a rig_numbers_array <<< "$RIG_NUMBERS"
 
 # Use the array expansion to pass individual numbers as separate arguments
-python -u transfer-data.py -ip ip_addresses.csv -e "$EXP_NAME" -l "${rig_numbers_array[@]}" -r "$REMOVE" > python_output.log 2>&1
+python -u transfer-data.py -ip ip_addresses.csv -e "$EXP_NAME" -l "${rig_numbers_array[@]}" -r "$REMOVE" > python-output_"$EXP_NAME".log 2>&1
