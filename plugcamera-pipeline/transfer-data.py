@@ -69,6 +69,10 @@ if(remove_files==True):
 if(remove_files==False):
     remove_files = ''
 
+print('\nremove_files variable:')
+print(remove_files)
+print('\n')
+
 # shell script content
 shell_script_content = f"""#!/bin/bash
 #SBATCH --job-name=rsync_pis
