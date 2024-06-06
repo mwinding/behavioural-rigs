@@ -25,5 +25,11 @@ conda activate pyimagej-env
 # Convert RIG_NUMBERS into an array
 IFS=' ' read -r -a rig_numbers_array <<< "$RIG_NUMBERS"
 
-# Use the array expansion to pass individual numbers as separate arguments
-python -u transfer-data.py -ip ip_addresses.csv -e "$EXP_NAME" -l "${rig_numbers_array[@]}" -r $REMOVE > python-output_"$EXP_NAME".log 2>&1
+# Construct the python command
+python_cmd="python -u transfer-data.py -ip ip_addresses.csv -e \"$EXP_NAME\" -l \"${rig_numbers_array[@]}\""
+if [ "$REMOVE" = "True" ]; then
+    python_cmd="$python_cmd -r $REMOVE"
+fi
+
+# Execute the python command
+eval $python_cmd > python-output_"$EXP_NAME".log 2>&1
