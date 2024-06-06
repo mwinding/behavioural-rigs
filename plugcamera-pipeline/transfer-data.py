@@ -75,7 +75,7 @@ shell_script_content = f"""#!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --array=1-{len(IPs)}
-#SBATCH --partition=cpu
+#SBATCH --partition=ncpu
 #SBATCH --mem=10G
 #SBATCH --time=08:00:00
 
