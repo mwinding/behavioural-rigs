@@ -64,10 +64,11 @@ len(IPs)
 IPs_string = ' '.join(IPs)
 
 # remove source files from RPi or not, is a user-input parameter
-remove_files_option = '--remove-source-files ' if remove_files==True else ''
+if remove_files==True: remove_files_option = '--remove-source-files '  
+if remove_files==False: remove_files_option = '' 
 
 print('\nremove_files variable:')
-print(remove_files)
+print(remove_files_option)
 print('\n')
 
 # shell script content
@@ -89,7 +90,7 @@ ip_var="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
 echo $ip_var
 
 rsync -avzh --progress plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
-rsync -avzh --progress {remove_files}plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
+rsync -avzh --progress {remove_files_option}plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
 rsync_status=$?
 
 # check rsync status and output file if it fails to allow user to easily notice
