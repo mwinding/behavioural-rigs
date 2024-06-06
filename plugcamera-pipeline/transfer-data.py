@@ -18,7 +18,7 @@ parser.add_argument('-ip', '--ip_path', type=str, required=True, default=ip_path
 parser.add_argument('-e', '--experiment-name', type=str, required=True, help='name of experiment, will create a folder')
 parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, default=[], help='list of rig names')
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
-parser.add_argument('-r', '--remove-files', type=bool, default=remove_files, help='whether to remove files from RPi source')
+parser.add_argument('-r', '--remove-files', type=str, default=str(remove_files), help='whether to remove files from RPi source')
 
 # ingesting user-input arguments
 args = parser.parse_args()
@@ -26,7 +26,7 @@ ip_path = args.ip_path
 list_names = args.list_of_rig_names
 username = args.username
 experiment_name = args.experiment_name
-remove_files = args.remove_files
+remove_files = args.remove_files.lower() in ['true', '1', 'yes']
 
 # save-path on NEMO
 save_path = f'/camp/lab/windingm/data/instruments/behavioural_rigs/plugcamera/{experiment_name}'
