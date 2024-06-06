@@ -18,7 +18,7 @@ ml Anaconda3/2023.09-0
 ml FFmpeg/4.1-foss-2018b
 source /camp/apps/eb/software/Anaconda/conda.env.sh
 
-conda activate plugcamera-pipeline
+conda activate pyimagej-env
 #python -u transfer-data.py -ip ip_addresses.csv -e test_exp -l 41 42 43 > transfer_python-output.log 2>&1
 #python -u transfer-data.py -ip ip_addresses.csv -e $EXP_NAME -l $RIG_NUMBERS -r $REMOVE > python_output.log 2>&1
 
