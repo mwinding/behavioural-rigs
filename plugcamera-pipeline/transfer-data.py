@@ -64,7 +64,7 @@ len(IPs)
 IPs_string = ' '.join(IPs)
 
 # remove source files from RPi or not, is a user-input parameter
-remove_files_option = '--remove-source-files ' if remove_files else ''
+remove_files_option = '--remove-source-files ' if remove_files==True else ''
 
 print('\nremove_files variable:')
 print(remove_files)
