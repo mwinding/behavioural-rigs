@@ -182,3 +182,22 @@ for i, IP in enumerate(IPs):
         print(f"Script failed on {rig_name} [{IP}]")
 
 print('')
+
+print('RESTARTING RPIs...')
+for i, IP in enumerate(IPs):
+    rig_name = f'pc{rig_num[i]}'
+
+    print(f'restarting {rig_name} [{IP}]')
+    ssh_command = f'sshpass -p {password} ssh {username}@{IP} sudo shutdown -r now'
+
+    try:
+        check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        feedback = check_result.stdout.decode().strip()
+        error_feedback = check_result.stderr.decode().strip()
+        
+        if feedback:
+            print(f'\t{feedback}')
+        if error_feedback:
+            print(f'\tError: {error_feedback}')
+    except subprocess.CalledProcessError as e:
+        print(f'\tFailed to restart {rig_name} [{IP}]: {e}')
