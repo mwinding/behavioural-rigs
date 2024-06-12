@@ -5,6 +5,7 @@ from picamera2 import Picamera2
 import os
 import numpy as np
 import argparse
+import subprocess
 
 # Example usage
 # python plug-camera_timelapse.py -r [rig_name]
