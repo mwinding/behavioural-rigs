@@ -87,3 +87,19 @@ picam2.stop()
 
 # save capture_times in case needed in the future, in seconds
 np.savetxt(f'data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_capture-times.csv', capture_times, delimiter=",")
+
+# restarting RPi
+print(f'restarting {rig_name} [{IP}]')
+ssh_command = f'sudo shutdown -r now'
+
+try:
+    check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    feedback = check_result.stdout.decode().strip()
+    error_feedback = check_result.stderr.decode().strip()
+    
+    if feedback:
+        print(f'\t{feedback}')
+    if error_feedback:
+        print(f'\tError: {error_feedback}')
+except subprocess.CalledProcessError as e:
+    print(f'\tFailed to restart {rig_name} [{IP}]: {e}')
