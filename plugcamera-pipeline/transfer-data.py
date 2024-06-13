@@ -101,7 +101,7 @@ rsync_status=$?
 # check rsync status and output file if it fails to allow user to easily notice
 if [ $rsync_status -ne 0 ]; then
     # If rsync fails, create a file indicating failure
-    echo "Rsync failed for IP: $ip_var" > "FAILED-rsync_{experiment_name}_${{rig}}-${{ip}}.out"
+    echo "Rsync failed for IP: $ip_var" > "FAILED-rsync_{experiment_name}_${{rig}}_IP-${{ip}}.out"
 fi
 
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
