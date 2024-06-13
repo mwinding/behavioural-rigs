@@ -62,6 +62,7 @@ start_transfer = datetime.now()
 
 len(IPs)
 IPs_string = ' '.join(IPs)
+rig_num_str = [f'pc{x}' for x in rig_num]
 rigs_string = ' '.join(rig_num)
 
 # remove source files from RPi or not, is a user-input parameter
