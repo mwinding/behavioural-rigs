@@ -62,6 +62,7 @@ start_transfer = datetime.now()
 
 len(IPs)
 IPs_string = ' '.join(IPs)
+rigs_string = ' '.join(rig_num)
 
 # remove source files from RPi or not, is a user-input parameter
 if remove_files==True: remove_files_option = '--remove-source-files '  
@@ -83,7 +84,10 @@ shell_script_content = f"""#!/bin/bash
 
 # convert ip_string to shell array
 IFS=' ' read -r -a ip_array <<< "{IPs_string}"
-ip_var="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
+ip="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
+
+IFS=' ' read -r -a rig_array <<< "{rig_num}"
+rig="${{rig_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 # rsync using the IP address obtained above
 
@@ -96,7 +100,7 @@ rsync_status=$?
 # check rsync status and output file if it fails to allow user to easily notice
 if [ $rsync_status -ne 0 ]; then
     # If rsync fails, create a file indicating failure
-    echo "Rsync failed for IP: $ip_var" > "FAILED-rsync_IP-$ip_var.out"
+    echo "Rsync failed for IP: $ip_var" > "FAILED-rsync_{experiment_name}_$rig_IP-$ip.out"
 fi
 
 ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
