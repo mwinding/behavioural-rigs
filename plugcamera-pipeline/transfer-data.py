@@ -87,7 +87,7 @@ shell_script_content = f"""#!/bin/bash
 IFS=' ' read -r -a ip_array <<< "{IPs_string}"
 ip="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
-IFS=' ' read -r -a rig_array <<< "{rig_num}"
+IFS=' ' read -r -a rig_array <<< "{rigs_string}"
 rig="${{rig_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 # rsync using the IP address obtained above
