@@ -92,19 +92,19 @@ rig="${{rig_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 # rsync using the IP address obtained above
 
-echo $ip_var
+echo $ip
 
-rsync -avzh --progress plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
-rsync -avzh --progress {remove_files_option}plugcamera@$ip_var:/home/plugcamera/data/ {save_path}/raw_data
+rsync -avzh --progress plugcamera@$ip:/home/plugcamera/data/ {save_path}/raw_data
+rsync -avzh --progress {remove_files_option}plugcamera@$ip:/home/plugcamera/data/ {save_path}/raw_data
 rsync_status=$?
 
 # check rsync status and output file if it fails to allow user to easily notice
 if [ $rsync_status -ne 0 ]; then
     # If rsync fails, create a file indicating failure
-    echo "Rsync failed for IP: $ip_var" > "FAILED-rsync_{experiment_name}_${{rig}}_IP-${{ip}}.out"
+    echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name}_${{rig}}_IP-${{ip}}.out"
 fi
 
-ssh plugcamera@$ip_var "find data/ -mindepth 1 -type d -empty -delete"
+ssh plugcamera@$ip "find data/ -mindepth 1 -type d -empty -delete"
 """
 
 # Create a temporary file to hold the SBATCH script
