@@ -89,18 +89,31 @@ picam2.stop()
 # save capture_times in case needed in the future, in seconds
 np.savetxt(f'data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_capture-times.csv', capture_times, delimiter=",")
 
+def run_command(ssh_command, rig_name):
+    try:
+        check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        feedback = check_result.stdout.decode().strip()
+        error_feedback = check_result.stderr.decode().strip()
+        
+        if feedback:
+            print(f'\t{feedback}')
+        if error_feedback:
+            print(f'\tError: {error_feedback}')
+    except subprocess.CalledProcessError as e:
+        print(f'\tFailed to restart {rig_name}: {e}')
+
+# clearing log files
+logfile1 = '/var/log/syslog.1'
+logfile2 = '/var/log/kern.log.1'
+print(f'clearing log files: {logfile1}, {logfile2}')
+
+ssh_command1 = f'sudo rm {logfile1}'
+run_command(ssh_command, rig_name)
+
+ssh_command2 = f'sudo rm {logfile2}'
+run_command(ssh_command, rig_name)
+
 # restarting RPi
 print(f'restarting {rig_name}')
 ssh_command = f'sudo shutdown -r now'
-
-try:
-    check_result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    feedback = check_result.stdout.decode().strip()
-    error_feedback = check_result.stderr.decode().strip()
-    
-    if feedback:
-        print(f'\t{feedback}')
-    if error_feedback:
-        print(f'\tError: {error_feedback}')
-except subprocess.CalledProcessError as e:
-    print(f'\tFailed to restart {rig_name}: {e}')
+run_command(ssh_command, rig_name)
