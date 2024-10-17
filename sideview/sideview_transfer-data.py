@@ -209,7 +209,7 @@ if directory_contents:
         if '.h264' in file:
             print(f"\nProcessing: {save_path}/{file}")
             file = file.replace('.h264','')
-            run_commands_in_directory(f'{save_path}/{file}', f'{save_path}/{file}')
+            run_commands_in_directory(f'{save_path}/{file}')
 else:
     print("No directories found.")
 
