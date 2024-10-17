@@ -29,7 +29,7 @@ experiment_name = args.experiment_name
 remove_files = args.remove_files
 
 # save-path on NEMO
-save_path = f'/camp/lab/windingm/home/users/{experiment_name}'
+save_path = f'/camp/lab/windingm/data/instruments/behavioural_rigs/sideview/{experiment_name}'
 
 # pull IP address data
 data = pd.read_csv(ip_path)
