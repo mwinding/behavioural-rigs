@@ -71,10 +71,10 @@ print('\n')
 shell_script_content = f"""#!/bin/bash
 #SBATCH --job-name=rsync_pis
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=16
 #SBATCH --array=1-{len(IPs)}
 #SBATCH --partition=ncpu
-#SBATCH --mem=10G
+#SBATCH --mem=120G
 #SBATCH --time=08:00:00
 
 # convert ip_string to shell array
