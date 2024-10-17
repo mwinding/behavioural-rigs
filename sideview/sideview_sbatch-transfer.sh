@@ -26,7 +26,7 @@ conda activate pyimagej-env
 IFS=' ' read -r -a rig_numbers_array <<< "$RIG_NUMBERS"
 
 # Construct the python command
-python_cmd="python -u transfer-data.py -ip ip_addresses.csv -e "$EXP_NAME" -l "${rig_numbers_array[@]}""
+python_cmd="python -u sideview_transfer-data.py -ip ip_addresses.csv -e "$EXP_NAME" -l "${rig_numbers_array[@]}""
 if [ "$REMOVE" = "True" ]; then
     python_cmd="$python_cmd -r"
 fi
