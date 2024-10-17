@@ -31,5 +31,7 @@ if [ "$REMOVE" = "True" ]; then
     python_cmd="$python_cmd -r"
 fi
 
+BASENAME=$(basename "$EXP_NAME")
+
 # Execute the python command
-eval $python_cmd > python-output_"$EXP_NAME".log 2>&1
+eval $python_cmd > python-output_"$BASENAME".log 2>&1
