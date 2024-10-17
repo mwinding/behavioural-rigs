@@ -186,7 +186,7 @@ def run_commands_in_directory(path):
     # convert .h264 to .mp4
     # convert .h264 to .mp4 1fps, 30fps playback
     convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}.mp4'
-    convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -r 30 -pix_fmt yuv420p -c:a copy {path}.mp4'
+    convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -r 30 -pix_fmt yuv420p -c:a copy {path}_1fps_30fps-playback.mp4'
 
     # Run the commands using subprocess
     subprocess.run(convert_mp4, shell=True)
