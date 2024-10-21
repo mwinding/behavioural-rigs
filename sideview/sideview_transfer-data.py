@@ -9,7 +9,7 @@ import tempfile
 
 # default argument values
 username = 'plugcamera'
-ip_path = 'ip_addresses.csv'
+ip_path = 'inventory.csv'
 remove_files = False
 
 # pulling user-input variables from command line
