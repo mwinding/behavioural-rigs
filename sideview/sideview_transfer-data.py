@@ -8,7 +8,7 @@ import time
 import tempfile
 
 # default argument values
-username = 'plugcamera'
+username = 'sideview'
 ip_path = 'inventory.csv'
 remove_files = False
 
@@ -29,7 +29,7 @@ experiment_name = args.experiment_name
 remove_files = args.remove_files
 
 # save-path on NEMO
-save_path = f'/camp/lab/windingm/data/instruments/behavioural_rigs/sideview/{experiment_name}'
+save_path = f'/camp/lab/windingm/data/instruments/behavioural_rigs/{username}/{experiment_name}'
 
 # pull IP address data
 data = pd.read_csv(ip_path)
@@ -88,8 +88,8 @@ rig="${{rig_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 echo $ip
 
-rsync -avzh --progress sideview@$ip:/home/sideview/data/ {save_path}
-rsync -avzh --progress {remove_files_option}sideview@$ip:/home/sideview/data/ {save_path}
+rsync -avzh --progress {username}@$ip:/home/{username}/data/ {save_path}
+rsync -avzh --progress {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
 rsync_status=$?
 
 # check rsync status and output file if it fails to allow user to easily notice
@@ -98,7 +98,7 @@ if [ $rsync_status -ne 0 ]; then
     echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name}_${{rig}}_IP-${{ip}}.out"
 fi
 
-ssh sideview@$ip "find data/ -mindepth 1 -type d -empty -delete"
+ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
 """
 
 # Create a temporary file to hold the SBATCH script
