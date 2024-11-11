@@ -221,6 +221,19 @@ else:
 '''
 #### new bit using an array job to process the videos
 # Identify all .h264 files in the directory for array processing
+def list_directory_contents(folder_path):
+    # Check if the given path is a directory
+    if not os.path.isdir(folder_path):
+        print(f"{folder_path} is not a valid directory path.")
+        return
+    
+    # Get the list of items in the directory
+    contents = os.listdir(folder_path)
+    
+    return contents
+
+directory_contents = list_directory_contents(save_path)
+
 h264_files = [f"{save_path}/{file.replace('.h264', '')}" for file in directory_contents if file.endswith('.h264')]
 h264_files_string = ' '.join(h264_files)
 
