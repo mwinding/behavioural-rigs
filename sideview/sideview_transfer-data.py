@@ -194,9 +194,9 @@ def run_commands_in_directory(path):
     #convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/30" -r 30 -c:v h264_nvenc -preset slow -cq 18 -b:v 5M -maxrate 8M {path}_1fps_30fps-playback.mp4'
 
     convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v copy -c:a copy {path}.mp4'
-    convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v h264_nvenc -preset slow -cq 18 -b:v 5M -maxrate 8M -pix_fmt yuv420p -c:a copy {path}_1fps.mp4'
-    convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/30" -r 30 -c:v h264_nvenc -preset slow -cq 18 -b:v 5M -maxrate 8M {path}_1fps_30fps-playback.mp4'
-
+    convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}_1fps.mp4'
+    convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/30" -r 30 {path}_1fps_30fps-playback.mp4'
+    
     #convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}.mp4'
     #convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}_1fps.mp4'
     #convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/30" -r 30 {path}_1fps_30fps-playback.mp4'
