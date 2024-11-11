@@ -26,6 +26,8 @@ ip_path = args.ip_path
 list_names = args.list_of_rig_names
 username = args.username
 experiment_name = args.experiment_name
+experiment_name_base = os.path.basename(experiment_name)
+
 remove_files = args.remove_files
 
 # save-path on NEMO
@@ -75,7 +77,7 @@ shell_script_content = f"""#!/bin/bash
 #SBATCH --array=1-{len(IPs)}
 #SBATCH --partition=ncpu
 #SBATCH --mem=120G
-#SBATCH --time=08:00:00
+#SBATCH --time=20:00:00
 
 # convert ip_string to shell array
 IFS=' ' read -r -a ip_array <<< "{IPs_string}"
@@ -95,7 +97,7 @@ rsync_status=$?
 # check rsync status and output file if it fails to allow user to easily notice
 if [ $rsync_status -ne 0 ]; then
     # If rsync fails, create a file indicating failure
-    echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name}_${{rig}}_IP-${{ip}}.out"
+    echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
 fi
 
 ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
