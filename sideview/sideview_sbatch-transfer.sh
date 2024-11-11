@@ -3,7 +3,7 @@
 # usage: when transferring from plugcameras 50, 51, and 52 for example, use the following:
 # sbatch --export=EXP_NAME=anna/2024-10-21_test-exp,RIG_NUMBERS="1 2 3",REMOVE=False sideview_sbatch-transfer.sh
 
-#SBATCH --job-name=pc_transfer
+#SBATCH --job-name=sv_transfer
 #SBATCH --ntasks=1
 #SBATCH --time=20:00:00
 #SBATCH --mem=200G
