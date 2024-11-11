@@ -167,10 +167,10 @@ end_transfer = datetime.now()
 ###############################
 ###### PROCESS DATA ###########
 # convert to .mp4 and crop
-# adapted from Lucy Kimbley
+# originally adapted from Lucy Kimbley
 
 start_processing = datetime.now()
-
+'''
 def list_directory_contents(folder_path):
     # Check if the given path is a directory
     if not os.path.isdir(folder_path):
@@ -187,19 +187,11 @@ def run_commands_in_directory(path):
     # Define the commands
 
     # convert .h264 to .mp4
-    # convert .h264 to .mp4 1fps, 30fps playback
-
-    #convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v h264_nvenc -preset slow -cq 18 -b:v 5M -maxrate 8M -pix_fmt yuv420p -c:a copy {path}.mp4'
-    #convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v h264_nvenc -preset slow -cq 18 -b:v 5M -maxrate 8M -pix_fmt yuv420p -c:a copy {path}_1fps.mp4'
-    #convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/30" -r 30 -c:v h264_nvenc -preset slow -cq 18 -b:v 5M -maxrate 8M {path}_1fps_30fps-playback.mp4'
+    # convert .h264 to .mp4 1fps, 24fps playback
 
     convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v copy -c:a copy {path}.mp4'
     convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}_1fps.mp4'
-    convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/30" -r 30 {path}_1fps_30fps-playback.mp4'
-    
-    #convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}.mp4'
-    #convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}_1fps.mp4'
-    #convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/30" -r 30 {path}_1fps_30fps-playback.mp4'
+    convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/24" -r 24 {path}_1fps_24fps-playback.mp4'
     remove_h264 = f'rm {path}.h264'
 
     # Run the commands using subprocess
@@ -207,7 +199,6 @@ def run_commands_in_directory(path):
     subprocess.run(convert_mp4_1fps, shell=True)
     subprocess.run(convert_mp4_30fps_playback, shell=True)
     subprocess.run(remove_h264, shell=True)
-
 # Path to the parent directory with the folders you want to list
 directory_contents = list_directory_contents(save_path)
 
@@ -227,6 +218,73 @@ if directory_contents:
             run_commands_in_directory(f'{save_path}/{file}')
 else:
     print("No directories found.")
+'''
+#### new bit using an array job to process the videos
+# Identify all .h264 files in the directory for array processing
+h264_files = [f"{save_path}/{file.replace('.h264', '')}" for file in directory_contents if file.endswith('.h264')]
+h264_files_string = ' '.join(h264_files)
+
+# Array job script for processing each .h264 file
+process_script_content = f"""#!/bin/bash
+#SBATCH --job-name=process_videos
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --array=1-{len(h264_files)}
+#SBATCH --partition=ncpu
+#SBATCH --mem=120G
+#SBATCH --time=10:00:00
+
+# Convert h264_files_string to an array
+IFS=' ' read -r -a files <<< "{h264_files_string}"
+file="${{files[$SLURM_ARRAY_TASK_ID-1]}}"
+
+# Commands to process each file
+convert_mp4="ffmpeg -i \\"${{file}}.h264\\" -c:v copy -c:a copy \\"${{file}}.mp4\\""
+convert_mp4_1fps="ffmpeg -i \\"${{file}}.mp4\\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \\"${{file}}_1fps.mp4\\""
+convert_mp4_30fps_playback="ffmpeg -i \\"${{file}}_1fps.mp4\\" -filter:v 'setpts=PTS/24' -r 24 \\"${{file}}_1fps_24fps-playback.mp4\\""
+remove_h264="rm \\"${{file}}.h264\\""
+
+# Execute commands
+eval $convert_mp4
+eval $convert_mp4_1fps
+eval $convert_mp4_30fps_playback
+eval $remove_h264
+"""
+
+# Create a temporary file to hold the SBATCH script
+with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_process_script:
+    tmp_process_script.write(process_script_content)
+    tmp_process_script_path = tmp_process_script.name
+
+# Submit the SBATCH script
+process_submission = subprocess.run(["sbatch", tmp_process_script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+# Optionally, delete the temporary file after submission
+os.unlink(tmp_process_script_path)
+
+# Check the result and extract job ID from the output
+if process_submission.returncode == 0:
+    process_job_id_output = process_submission.stdout.strip()
+    print(process_job_id_output)
+
+    process_job_id = process_job_id_output.split()[-1]
+
+    print(process_submission.stdout)
+else:
+    print("Failed to submit processing job array")
+    print(process_submission.stderr)
+    exit(1)
+
+seconds = 60
+print(f"Wait for {seconds} seconds before checking if array job has completed")
+time.sleep(seconds)
+
+print(f"Waiting for processing array job {process_job_id} to complete...")
+while not is_job_array_completed(process_job_id):
+    print(f"Processing array job {process_job_id} is still running. Waiting...")
+    time.sleep(30)  # Check every 30 seconds
+
+print(f"Processing array job {process_job_id} has completed.\n")
 
 end_processing = datetime.now()
 
