@@ -16,7 +16,7 @@
 
 ml purge
 ml Anaconda3/2023.09-0
-ml FFmpeg/4.1-foss-2018b
+ml FFmpeg/6.0-GCCcore-12.3.0
 source /camp/apps/eb/software/Anaconda/conda.env.sh
 
 conda activate pyimagej-env
