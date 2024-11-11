@@ -5,10 +5,11 @@
 
 #SBATCH --job-name=pc_transfer
 #SBATCH --ntasks=1
-#SBATCH --time=08:00:00
-#SBATCH --mem=12G
-#SBATCH --partition=ncpu
-#SBATCH --cpus-per-task=8
+#SBATCH --time=20:00:00
+#SBATCH --mem=200G
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1  
+#SBATCH --cpus-per-task=16
 #SBATCH --output=slurm-%j.out
 #SBATCH --mail-user=$(whoami)@crick.ac.uk
 #SBATCH --mail-type=FAIL
