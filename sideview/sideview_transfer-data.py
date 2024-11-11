@@ -170,55 +170,7 @@ end_transfer = datetime.now()
 # originally adapted from Lucy Kimbley
 
 start_processing = datetime.now()
-'''
-def list_directory_contents(folder_path):
-    # Check if the given path is a directory
-    if not os.path.isdir(folder_path):
-        print(f"{folder_path} is not a valid directory path.")
-        return
-    
-    # Get the list of items in the directory
-    contents = os.listdir(folder_path)
-    
-    return contents
 
-# generate and crop mp4 videos for each directory
-def run_commands_in_directory(path):
-    # Define the commands
-
-    # convert .h264 to .mp4
-    # convert .h264 to .mp4 1fps, 24fps playback
-
-    convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v copy -c:a copy {path}.mp4'
-    convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}_1fps.mp4'
-    convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/24" -r 24 {path}_1fps_24fps-playback.mp4'
-    remove_h264 = f'rm {path}.h264'
-
-    # Run the commands using subprocess
-    subprocess.run(convert_mp4, shell=True)
-    subprocess.run(convert_mp4_1fps, shell=True)
-    subprocess.run(convert_mp4_30fps_playback, shell=True)
-    subprocess.run(remove_h264, shell=True)
-# Path to the parent directory with the folders you want to list
-directory_contents = list_directory_contents(save_path)
-
-if directory_contents:
-    print(f"Contents of {save_path}:")
-    for item in directory_contents:
-        print(item)
-else:
-    print("No contents found.")
-
-if directory_contents:
-    print(f"Processing each directory in {save_path}:")
-    for file in directory_contents:
-        if '.h264' in file:
-            print(f"\nProcessing: {save_path}/{file}")
-            file = file.replace('.h264','')
-            run_commands_in_directory(f'{save_path}/{file}')
-else:
-    print("No directories found.")
-'''
 #### new bit using an array job to process the videos
 # Identify all .h264 files in the directory for array processing
 def list_directory_contents(folder_path):
@@ -239,9 +191,9 @@ h264_files_string = ' '.join(h264_files)
 
 # Array job script for processing each .h264 file
 process_script_content = f"""#!/bin/bash
-#SBATCH --job-name=process_videos
+#SBATCH --job-name=sv_process
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=32
 #SBATCH --array=1-{len(h264_files)}
 #SBATCH --partition=ncpu
 #SBATCH --mem=120G
