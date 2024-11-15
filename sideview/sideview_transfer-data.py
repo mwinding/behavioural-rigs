@@ -101,8 +101,8 @@ if [ $rsync_status -ne 0 ]; then
 fi
 
 ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
+ssh {username}@$ip "sudo shutdown -h now"
 """
-#ssh {username}@$ip "sudo shutdown -h now"
 
 # Create a temporary file to hold the SBATCH script
 with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_script:
