@@ -208,6 +208,7 @@ convert_mp4="ffmpeg -i \\"${{file}}.h264\\" -c:v copy -c:a copy \\"${{file}}.mp4
 convert_mp4_1fps="ffmpeg -i \\"${{file}}.mp4\\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \\"${{file}}_1fps.mp4\\""
 convert_mp4_30fps_playback="ffmpeg -i \\"${{file}}_1fps.mp4\\" -filter:v 'setpts=PTS/24' -r 24 \\"${{file}}_1fps_24fps-playback.mp4\\""
 remove_h264="rm \\"${{file}}.h264\\""
+remove_h264=\\"${{file}}_1fps.mp4\\""
 
 # Execute commands
 eval $convert_mp4
