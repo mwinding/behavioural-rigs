@@ -36,7 +36,7 @@ sleep_time = 0
 parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH password, path of IP addresses to test, and a save path for the connectivity data')
 parser.add_argument('-p', '--ssh-password', type=str, required=True, help='SSH password')
 parser.add_argument('-ip', '--ip_path', type=str, required=True, help='The path to a CSV containing all IP_addresses')
-parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, default=[], help='list of rig names')
+parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, required=True, default=[], help='list of rig names')
 parser.add_argument('-s', '--save-path', type=str, default=save_path, help='The path to save folder for SSH connectivity data')
 parser.add_argument('-t', '--timeout', type=int, default=timeout, help='Number of seconds to attempt SSH connection')
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
@@ -66,7 +66,6 @@ IPs = data.IP_address
 rig_num = data.rig_number
 
 # only pulls IPs of interest and runs the script on those
-# this is ignored if no list_names is input with `-l` argument; instead all pis are run
 if(len(list_names)>0):
     data.index = data.rig_number
     IPs = data.loc[list_names, 'IP_address'].values
