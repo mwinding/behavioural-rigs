@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # usage: when transferring from plugcameras 50, 51, and 52 for example, use the following:
-# sbatch --export=EXP=anna/2024-10-21_test-exp,CON="group-housed",RIGS="1 2 3",REMOVE=True,MODEL='sideview',JOB='pcb' sideview_pipeline.sh
+# sbatch --export=EXP=Michael/2024-11-21_test-exp,CON="group-housed",RIGS="1 2 3",REMOVE=True,MODEL="sideview",JOB="pcb" sideview_pipeline.sh
 
 # Usage: sbatch --export=MODEL="sideview",JOB="pcd" sleap-track_batch.sh
 # optional parameters: sbatch --export=MODEL="sideview",JOB='ptcd',TRACK="False",FRAMES="0-10" sleap-track_batch.sh
@@ -25,7 +25,7 @@ ml Anaconda3/2023.09-0
 ml FFmpeg/6.0-GCCcore-12.3.0
 source /camp/apps/eb/software/Anaconda/conda.env.sh
 
-conda activate /camp/lab/windingm/home/shared/conda-envs/sleap #use shared conda env on NEMO
+conda activate pyimagej-env
 
 ##### STEP 1: TRANSFER DATA AND CONVERT TO MP4 #######
 ######################################################
@@ -47,6 +47,8 @@ eval $python_cmd > python-output_"$BASENAME".log 2>&1
 
 ##### STEP 2: SLEAP PREDICTIONS, FEATHER CONVERSION, DBSCAN CLUSTERING #######
 ##############################################################################
+conda deactivate
+conda activate /camp/lab/windingm/home/shared/conda-envs/sleap #use shared conda env on NEMO
 
 # directory with mp4s within
 DIR="/camp/lab/windingm/data/instruments/behavioural_rigs/${MODEL}/${EXP}"
