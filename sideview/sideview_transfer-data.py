@@ -16,6 +16,7 @@ remove_files = False
 parser = argparse.ArgumentParser(description='rsync transfer to NEMO and mp4 conversion for sideview rigs')
 parser.add_argument('-ip', '--ip_path', type=str, required=True, default=ip_path, help='The path to a CSV containing all IP_addresses')
 parser.add_argument('-e', '--experiment-name', type=str, required=True, help='name of experiment, will create a folder')
+parser.add_argument('-c', '--condition', type=str, required=True, help='name of condition, will add to mp4')
 parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, default=[], help='list of rig names')
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
 parser.add_argument('-r', '--remove-files', action='store_true', help='whether to remove files from RPi source')
@@ -27,6 +28,7 @@ list_names = args.list_of_rig_names
 username = args.username
 experiment_name = args.experiment_name
 experiment_name_base = os.path.basename(experiment_name)
+condition = args.condition
 
 remove_files = args.remove_files
 
@@ -204,11 +206,11 @@ IFS=' ' read -r -a files <<< "{h264_files_string}"
 file="${{files[$SLURM_ARRAY_TASK_ID-1]}}"
 
 # Commands to process each file
-convert_mp4="ffmpeg -i \\"${{file}}.h264\\" -c:v copy -c:a copy \\"${{file}}.mp4\\""
-convert_mp4_1fps="ffmpeg -i \\"${{file}}.mp4\\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \\"${{file}}_1fps.mp4\\""
-convert_mp4_30fps_playback="ffmpeg -i \\"${{file}}_1fps.mp4\\" -filter:v 'setpts=PTS/24' -r 24 \\"${{file}}_1fps_24fps-playback.mp4\\""
+convert_mp4="ffmpeg -i \\"${{file}}.h264\\" -c:v copy -c:a copy \\"${{file}}_{condition}.mp4\\""
+convert_mp4_1fps="ffmpeg -i \\"${{file}}_{condition}.mp4\\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \\"${{file}}_{condition}_1fps.mp4\\""
+convert_mp4_30fps_playback="ffmpeg -i \\"${{file}}_{condition}_1fps.mp4\\" -filter:v 'setpts=PTS/24' -r 24 \\"${{file}}_{condition}_1fps_24fps-playback.mp4\\""
 remove_h264="rm \\"${{file}}.h264\\""
-remove_h264=\\"${{file}}_1fps.mp4\\""
+remove_h264=\\"${{file}}_{condition}_1fps.mp4\\""
 
 # Execute commands
 eval $convert_mp4
