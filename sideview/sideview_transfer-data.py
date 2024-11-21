@@ -58,7 +58,7 @@ if not os.path.exists(save_path):
 
 start_transfer = datetime.now()
 
-len(IPs)
+print(f'Running rsync on {len(IPs)} IPs, {IPs}') 
 IPs_string = ' '.join(IPs)
 rig_num_str = [f'sv{x}' for x in rig_num]
 rigs_string = ' '.join(rig_num_str)
