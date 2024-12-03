@@ -32,8 +32,12 @@ condition = args.condition
 
 remove_files = args.remove_files
 
+# change whether the input path is acceptable
+if '/' not in experiment_name:
+    raise ValueError("Error: double-check EXP_NAME, it should contain your username. For example, 'windinm/2024-12-03_sideview-exp1'")
+
 # save-path on NEMO
-save_path = f'/camp/lab/windingm/data/instruments/behavioural_rigs/{username}/{experiment_name}'
+save_path = f'/camp/lab/windingm/home/users/{experiment_name}'
 
 # pull IP address data
 data = pd.read_csv(ip_path)
