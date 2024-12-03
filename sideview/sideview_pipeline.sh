@@ -19,7 +19,6 @@
 #SBATCH --mail-user=$(whoami)@crick.ac.uk
 #SBATCH --mail-type=FAIL
 
-
 ml purge
 ml Anaconda3/2023.09-0
 ml FFmpeg/6.0-GCCcore-12.3.0
