@@ -85,6 +85,8 @@ shell_script_content = f"""#!/bin/bash
 #SBATCH --partition=ncpu
 #SBATCH --mem=120G
 #SBATCH --time=20:00:00
+#SBATCH --output=my_job.out
+#SBATCH --error=my_job.err
 
 # convert ip_string to shell array
 IFS=' ' read -r -a ip_array <<< "{IPs_string}"
@@ -95,6 +97,7 @@ rig="${{rig_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
 # rsync using the IP address obtained above
 
+echo "Job started at: $(date)"
 echo $ip
 
 rsync -avzh --progress {username}@$ip:/home/{username}/data/ {save_path}

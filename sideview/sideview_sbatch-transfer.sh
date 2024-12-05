@@ -12,6 +12,8 @@
 #SBATCH --output=slurm-%j.out
 #SBATCH --mail-user=$(whoami)@crick.ac.uk
 #SBATCH --mail-type=FAIL
+#SBATCH --output=my_job.out
+#SBATCH --error=my_job.err
 
 ml purge
 ml Anaconda3/2023.09-0
@@ -19,6 +21,9 @@ ml FFmpeg/6.0-GCCcore-12.3.0
 source /camp/apps/eb/software/Anaconda/conda.env.sh
 
 conda activate pyimagej-env
+
+echo "Command used to submit this job: sbatch $0 $@"
+echo "Job started at: $(date)"
 
 # Convert RIG_NUMBERS into an array
 IFS=' ' read -r -a rig_numbers_array <<< "$RIG_NUMBERS"
