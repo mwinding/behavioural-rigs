@@ -38,6 +38,7 @@ if '/' not in experiment_name:
 
 # save-path on NEMO
 save_path = f'/camp/lab/windingm/home/users/{experiment_name}'
+print(f'Save path is: {save_path}')
 
 # pull IP address data
 data = pd.read_csv(ip_path)
