@@ -20,6 +20,7 @@ parser.add_argument('-c', '--condition', type=str, required=True, help='name of 
 parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, default=[], help='list of rig names')
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
 parser.add_argument('-r', '--remove-files', action='store_true', help='whether to remove files from RPi source')
+parser.add_argument('-s', '--slurm-command', type=str, help='whether to remove files from RPi source')
 
 # ingesting user-input arguments
 args = parser.parse_args()
@@ -29,12 +30,17 @@ username = args.username
 experiment_name = args.experiment_name
 experiment_name_base = os.path.basename(experiment_name)
 condition = args.condition
+slurm_command = args.slurm_command
 
 remove_files = args.remove_files
 
 # change whether the input path is acceptable
 if '/' not in experiment_name:
     raise ValueError("Error: double-check EXP_NAME, it should contain your username. For example, 'windinm/2024-12-03_sideview-exp1'")
+
+# slurm-command and time
+print(f'Command used to submit this job: {slurm_command}')
+print(f'Time started: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
 # save-path on NEMO
 save_path = f'/camp/lab/windingm/home/users/{experiment_name}'
