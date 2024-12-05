@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # usage: when transferring from plugcameras 50, 51, and 52 for example, use the following:
-# sbatch --export=EXP_NAME=anna/2024-10-21_test-exp,RIG_NUMBERS="1 2 3",REMOVE=False sideview_sbatch-transfer.sh
+# sbatch --export=EXP_NAME=anna/2024-10-21_test-exp,CONDITION=TH-GAL4,RIG_NUMBERS="1 2 3",REMOVE=False sideview_sbatch-transfer.sh
 
 #SBATCH --job-name=sv_transfer
 #SBATCH --ntasks=1
@@ -24,7 +24,7 @@ conda activate pyimagej-env
 IFS=' ' read -r -a rig_numbers_array <<< "$RIG_NUMBERS"
 
 # Construct the python command
-python_cmd="python -u sideview_transfer-data.py -ip inventory.csv -e "$EXP_NAME" -l "${rig_numbers_array[@]}""
+python_cmd="python -u sideview_transfer-data.py -ip inventory.csv -e "$EXP_NAME" -c "$CONDITION" -l "${rig_numbers_array[@]}""
 if [ "$REMOVE" = "True" ]; then
     python_cmd="$python_cmd -r"
 fi
