@@ -83,16 +83,20 @@ print(remove_files_option)
 print('\n')
 
 # shell script content
-shell_script_content = f"""#!/bin/bash
+shell_script_ccontent = f"""#!/bin/bash
 #SBATCH --job-name=rsync_pis
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --array=1-{len(IPs)}
+"""
+if(len(IPs)>1):
+    shell_script_ccontent += f"""
+    #SBATCH --array=1-{len(IPs)}
+    """
+
+shell_script_ccontent += f"""
 #SBATCH --partition=ncpu
 #SBATCH --mem=120G
 #SBATCH --time=20:00:00
-#SBATCH --output=my_job.out
-#SBATCH --error=my_job.err
 
 # convert ip_string to shell array
 IFS=' ' read -r -a ip_array <<< "{IPs_string}"
