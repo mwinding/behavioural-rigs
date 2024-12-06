@@ -12,8 +12,6 @@
 #SBATCH --output=slurm-%j.out
 #SBATCH --mail-user=$(whoami)@crick.ac.uk
 #SBATCH --mail-type=FAIL
-#SBATCH --output=my_job.out
-#SBATCH --error=my_job.err
 
 ml purge
 ml Anaconda3/2023.09-0
@@ -22,14 +20,14 @@ source /camp/apps/eb/software/Anaconda/conda.env.sh
 
 conda activate pyimagej-env
 
-echo -e "Command used to submit this job: sbatch $0 $@"
+# echo -e "Command used to submit this job: sbatch $0 $@"
 echo "Job started at: $(date)"
 
 # Convert RIG_NUMBERS into an array
 IFS=' ' read -r -a rig_numbers_array <<< "$RIG_NUMBERS"
 
 # Construct the python command
-python_cmd="python -u sideview_transfer-data.py -ip inventory.csv -e "$EXP_NAME" -c "$CONDITION" -l "${rig_numbers_array[@]}" -s "sbatch $0 $@""
+python_cmd="python -u sideview_transfer-data.py -ip inventory.csv -e "$EXP_NAME" -c "$CONDITION" -l "${rig_numbers_array[@]}"" #-s "sbatch $0 $@"
 if [ "$REMOVE" = "True" ]; then
     python_cmd="$python_cmd -r"
 fi
