@@ -82,47 +82,75 @@ print('\nremove_files variable:')
 print(remove_files_option)
 print('\n')
 
-# shell script content
-shell_script_content = f"""#!/bin/bash
+if len(IPs) == 1:
+    shell_script_content = f'''#!/bin/bash
 #SBATCH --job-name=rsync_pis
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-"""
-if(len(IPs)>1):
-    shell_script_content += f"""
-    #SBATCH --array=1-{len(IPs)}
-    """
-
-shell_script_content += f"""
 #SBATCH --partition=ncpu
 #SBATCH --mem=120G
 #SBATCH --time=20:00:00
 
-# convert ip_string to shell array
+# Single IP setup
 IFS=' ' read -r -a ip_array <<< "{IPs_string}"
-ip="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
-
 IFS=' ' read -r -a rig_array <<< "{rigs_string}"
-rig="${{rig_array[$SLURM_ARRAY_TASK_ID-1]}}"
 
-# rsync using the IP address obtained above
+# Directly assign the single IP and rig
+ip="${{ip_array[0]}}"
+rig="${{rig_array[0]}}"
 
 echo "Job started at: $(date)"
-echo $ip
+echo "Using IP: $ip and Rig: $rig"
 
+# rsync using the single IP address
 rsync -avzh --progress {username}@$ip:/home/{username}/data/ {save_path}
 rsync -avzh --progress {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
 rsync_status=$?
 
-# check rsync status and output file if it fails to allow user to easily notice
+# Check rsync status and output file if it fails
 if [ $rsync_status -ne 0 ]; then
-    # If rsync fails, create a file indicating failure
     echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
 fi
 
 ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
 ssh {username}@$ip "sudo shutdown -h now"
-"""
+'''
+
+
+elif len(IPs) > 1:
+    shell_script_content = f'''#!/bin/bash
+#SBATCH --job-name=rsync_pis
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --partition=ncpu
+#SBATCH --mem=120G
+#SBATCH --time=20:00:00
+#SBATCH --array=1-{len(IPs)}
+
+# Multiple IP setup
+IFS=' ' read -r -a ip_array <<< "{IPs_string}"
+IFS=' ' read -r -a rig_array <<< "{rigs_string}"
+
+# Get the IP and rig for the current task ID
+ip="${{ip_array[$SLURM_ARRAY_TASK_ID-1]}}"
+rig="${{rig_array[$SLURM_ARRAY_TASK_ID-1]}}"
+
+echo "Job started at: $(date)"
+echo "Using IP: $ip and Rig: $rig"
+
+# rsync using the IP address for this task
+rsync -avzh --progress {username}@$ip:/home/{username}/data/ {save_path}
+rsync -avzh --progress {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
+rsync_status=$?
+
+# Check rsync status and output file if it fails
+if [ $rsync_status -ne 0 ]; then
+    echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
+fi
+
+ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
+ssh {username}@$ip "sudo shutdown -h now"
+'''
 
 # Create a temporary file to hold the SBATCH script
 with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_script:
