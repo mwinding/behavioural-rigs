@@ -264,13 +264,14 @@ convert_mp4="ffmpeg -i \\"${{file}}.h264\\" -c:v copy -c:a copy \\"${{file}}_{co
 convert_mp4_1fps="ffmpeg -i \\"${{file}}_{condition}.mp4\\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \\"${{file}}_{condition}_1fps.mp4\\""
 convert_mp4_30fps_playback="ffmpeg -i \\"${{file}}_{condition}_1fps.mp4\\" -filter:v 'setpts=PTS/24' -r 24 \\"${{file}}_{condition}_1fps_24fps-playback.mp4\\""
 remove_h264="rm \\"${{file}}.h264\\""
-remove_h264=\\"${{file}}_{condition}_1fps.mp4\\""
+remove_mp4=\\"${{file}}_{condition}_1fps.mp4\\""
 
 # Execute commands
 eval $convert_mp4
 eval $convert_mp4_1fps
 eval $convert_mp4_30fps_playback
 eval $remove_h264
+eval $remove_mp4
 """
 
 # Create a temporary file to hold the SBATCH script
