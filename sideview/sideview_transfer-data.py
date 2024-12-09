@@ -82,6 +82,10 @@ print('\nremove_files variable:')
 print(remove_files_option)
 print('\n')
 
+if len(IPs) == 0:
+    print("No IP addresses found. Check your inventory.csv or filtering logic.")
+    exit(1)
+
 if len(IPs) == 1:
     shell_script_content = f'''#!/bin/bash
 #SBATCH --job-name=rsync_pis
@@ -236,6 +240,10 @@ directory_contents = list_directory_contents(save_path)
 
 h264_files = [f"{save_path}/{file.replace('.h264', '')}" for file in directory_contents if file.endswith('.h264')]
 h264_files_string = ' '.join(h264_files)
+
+if len(h264_files) == 0:
+    print("No .h264 files found in the directory. Ensure the save_path is correct and contains files.")
+    exit(1)
 
 # Array job script for processing each .h264 file
 process_script_content = f"""#!/bin/bash
