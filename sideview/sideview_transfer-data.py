@@ -316,33 +316,30 @@ if 'a' in job: # array-job transfer
     #SBATCH --mem=120G
     #SBATCH --time=10:00:00
 
-    # Debugging: Print environment variables
-    set -x
-
     # Convert h264_files_string to an array
     IFS=$'\n' read -r -a files <<< "$(echo "{h264_files_string}" | tr ' ' '\n')"
 
     # Debugging info
-    echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
-    echo "Files array: ${files[@]}"
+    echo 'SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID'
+    echo 'Files array: ${{files[@]}}'
 
     # Assign file based on task ID
-    file="${files[$SLURM_ARRAY_TASK_ID-1]}"
+    file="${{files[$SLURM_ARRAY_TASK_ID-1]}}"
     echo "Processing file: $file"
 
     # Commands to process each file
-    convert_mp4="ffmpeg -i \"${file}.h264\" -c:v copy -c:a copy \"${file}_HCisolation.mp4\""
-    convert_mp4_1fps="ffmpeg -i \"${file}_HCisolation.mp4\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \"${file}_HCisolation_1fps.mp4\""
-    convert_mp4_30fps_playback="ffmpeg -i \"${file}_HCisolation_1fps.mp4\" -filter:v 'setpts=PTS/24' -r 24 \"${file}_HCisolation_1fps_24fps-playback.mp4\""
-    remove_h264="rm \"${file}.h264\""
-    remove_mp4="rm \"${file}_HCisolation_1fps.mp4\""
+    convert_mp4="ffmpeg -i \"${{file}}.h264\" -c:v copy -c:a copy \"${{file}}_HCisolation.mp4\""
+    convert_mp4_1fps="ffmpeg -i \"${{file}}_HCisolation.mp4\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \"${{file}}_HCisolation_1fps.mp4\""
+    convert_mp4_30fps_playback="ffmpeg -i \"${{file}}_HCisolation_1fps.mp4\" -filter:v 'setpts=PTS/24' -r 24 \"${{file}}_HCisolation_1fps_24fps-playback.mp4\""
+    remove_h264="rm \"${{file}}.h264\""
+    remove_mp4="rm \"${{file}}_HCisolation_1fps.mp4\""
 
     # Execute commands with error checks
-    eval "$convert_mp4" || { echo "Failed at convert_mp4"; exit 1; }
-    eval "$convert_mp4_1fps" || { echo "Failed at convert_mp4_1fps"; exit 1; }
-    eval "$convert_mp4_30fps_playback" || { echo "Failed at convert_mp4_30fps_playback"; exit 1; }
-    eval "$remove_h264" || { echo "Failed at remove_h264"; exit 1; }
-    eval "$remove_mp4" || { echo "Failed at remove_mp4"; exit 1; }
+    eval "$convert_mp4" || {{ echo "Failed at convert_mp4"; exit 1; }}
+    eval "$convert_mp4_1fps" || {{ echo "Failed at convert_mp4_1fps"; exit 1; }}
+    eval "$convert_mp4_30fps_playback" || {{ echo "Failed at convert_mp4_30fps_playback"; exit 1; }}
+    eval "$remove_h264" || {{ echo "Failed at remove_h264"; exit 1; }}
+    eval "$remove_mp4" || {{ echo "Failed at remove_mp4"; exit 1; }}
 
     echo "Finished processing file: $file"
     """
