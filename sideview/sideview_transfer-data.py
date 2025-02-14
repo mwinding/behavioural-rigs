@@ -321,11 +321,11 @@ if 'a' in job: # array-job transfer
     file="${{files[$SLURM_ARRAY_TASK_ID-1]}}"
 
     # Commands to process each file
-    convert_mp4="ffmpeg -i "${{file}}.h264" -c:v copy -c:a copy "${{file}}_{condition}.mp4""
-    convert_mp4_1fps="ffmpeg -i "${{file}}_{condition}.mp4" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy "${{file}}_{condition}_1fps.mp4""
-    convert_mp4_30fps_playback="ffmpeg -i "${{file}}_{condition}_1fps.mp4" -filter:v 'setpts=PTS/24' -r 24 "${{file}}_{condition}_1fps_24fps-playback.mp4""
-    remove_h264="rm "${{file}}.h264""
-    remove_mp4="${{file}}_{condition}_1fps.mp4""
+    convert_mp4="ffmpeg -i \"${file}.h264\" -c:v copy -c:a copy \"${file}_HCisolation.mp4\""
+    convert_mp4_1fps="ffmpeg -i \"${file}_HCisolation.mp4\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \"${file}_HCisolation_1fps.mp4\""
+    convert_mp4_30fps_playback="ffmpeg -i \"${file}_HCisolation_1fps.mp4\" -filter:v 'setpts=PTS/24' -r 24 \"${file}_HCisolation_1fps_24fps-playback.mp4\""
+    remove_h264="rm \"${file}.h264\""
+    remove_mp4="rm \"${file}_HCisolation_1fps.mp4\""
 
     # Execute commands
     eval $convert_mp4
