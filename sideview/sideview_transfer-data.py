@@ -218,7 +218,8 @@ if 't' in job:
         time.sleep(30)  # Check every 30 seconds
 
     print(f"Array job {job_id} has completed.\n")
-    end_transfer = datetime.now()
+    
+end_transfer = datetime.now()
 
 ###############################
 ###### PROCESS DATA ###########
@@ -316,7 +317,8 @@ if 'c' in job:
 
     print(f"Processing array job {process_job_id} has completed.\n")
 
-    end_processing = datetime.now()
+    
+end_processing = datetime.now()
 
 ################################
 ### HOW LONG DID IT TAKE? ######
