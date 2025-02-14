@@ -253,12 +253,14 @@ if 'c' in job:
         convert_mp4_1fps = f'ffmpeg -i {path}_{condition}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}_{condition}_1fps.mp4'
         convert_mp4_30fps_playback = f'ffmpeg -i {path}_{condition}_1fps.mp4 -filter:v "setpts=PTS/24" -r 24 {path}_{condition}_1fps_24fps-playback.mp4'
         remove_h264 = f'rm {path}.h264'
+        remove_mp4 = f'rm {path}_{condition}_1fps.mp4'
 
         # Run the commands using subprocess
         subprocess.run(convert_mp4, shell=True)
         subprocess.run(convert_mp4_1fps, shell=True)
         subprocess.run(convert_mp4_30fps_playback, shell=True)
         subprocess.run(remove_h264, shell=True)
+        subprocess.run(remove_mp4, shell=True)
 
     # Path to the parent directory with the folders you want to list
     directory_contents = list_directory_contents(save_path)
@@ -328,11 +330,11 @@ if 'a' in job: # array-job transfer
     echo "Processing file: $file"
 
     # Commands to process each file
-    convert_mp4="ffmpeg -i \"${{file}}.h264\" -c:v copy -c:a copy \"${{file}}_HCisolation.mp4\""
-    convert_mp4_1fps="ffmpeg -i \"${{file}}_HCisolation.mp4\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \"${{file}}_HCisolation_1fps.mp4\""
-    convert_mp4_30fps_playback="ffmpeg -i \"${{file}}_HCisolation_1fps.mp4\" -filter:v 'setpts=PTS/24' -r 24 \"${{file}}_HCisolation_1fps_24fps-playback.mp4\""
+    convert_mp4="ffmpeg -i \"${{file}}.h264\" -c:v copy -c:a copy \"${{file}}_{condition}.mp4\""
+    convert_mp4_1fps="ffmpeg -i \"${{file}}_{condition}.mp4\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \"${{file}}_{condition}_1fps.mp4\""
+    convert_mp4_30fps_playback="ffmpeg -i \"${{file}}_{condition}_1fps.mp4\" -filter:v 'setpts=PTS/24' -r 24 \"${{file}}_{condition}_1fps_24fps-playback.mp4\""
     remove_h264="rm \"${{file}}.h264\""
-    remove_mp4="rm \"${{file}}_HCisolation_1fps.mp4\""
+    remove_mp4="rm \"${{file}}_{condition}_1fps.mp4\""
 
     # Execute commands with error checks
     eval "$convert_mp4" || {{ echo "Failed at convert_mp4"; exit 1; }}
