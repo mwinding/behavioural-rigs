@@ -249,9 +249,9 @@ if 'c' in job:
         # convert .h264 to .mp4
         # convert .h264 to .mp4 1fps, 30fps playback
 
-        convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v copy -c:a copy {path}.mp4'
-        convert_mp4_1fps = f'ffmpeg -i {path}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}_1fps.mp4'
-        convert_mp4_30fps_playback = f'ffmpeg -i {path}_1fps.mp4 -filter:v "setpts=PTS/24" -r 24 {path}_1fps_24fps-playback.mp4'
+        convert_mp4 = f'ffmpeg -i "{path}.h264" -c:v copy -c:a copy {path}_{condition}.mp4'
+        convert_mp4_1fps = f'ffmpeg -i {path}_{condition}.mp4 -vf "fps=1" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy {path}_{condition}_1fps.mp4'
+        convert_mp4_30fps_playback = f'ffmpeg -i {path}_{condition}_1fps.mp4 -filter:v "setpts=PTS/24" -r 24 {path}_{condition}_1fps_24fps-playback.mp4'
         remove_h264 = f'rm {path}.h264'
 
         # Run the commands using subprocess
@@ -273,14 +273,15 @@ if 'c' in job:
     if directory_contents:
         print(f"Processing each directory in {save_path}:")
         for file in directory_contents:
-            if '.h264' in file:
+            if file.endswith('.h264'):
                 print(f"\nProcessing: {save_path}/{file}")
                 file = file.replace('.h264','')
                 run_commands_in_directory(f'{save_path}/{file}')
     else:
         print("No directories found.")
 
-    '''
+if 'a' in job: # array-job transfer
+    
     #### new bit using an array job to process the videos
     # Identify all .h264 files in the directory for array processing
     def list_directory_contents(folder_path):
@@ -320,11 +321,11 @@ if 'c' in job:
     file="${{files[$SLURM_ARRAY_TASK_ID-1]}}"
 
     # Commands to process each file
-    convert_mp4="ffmpeg -i \\"${{file}}.h264\\" -c:v copy -c:a copy \\"${{file}}_{condition}.mp4\\""
-    convert_mp4_1fps="ffmpeg -i \\"${{file}}_{condition}.mp4\\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \\"${{file}}_{condition}_1fps.mp4\\""
-    convert_mp4_30fps_playback="ffmpeg -i \\"${{file}}_{condition}_1fps.mp4\\" -filter:v 'setpts=PTS/24' -r 24 \\"${{file}}_{condition}_1fps_24fps-playback.mp4\\""
-    remove_h264="rm \\"${{file}}.h264\\""
-    remove_mp4=\\"${{file}}_{condition}_1fps.mp4\\""
+    convert_mp4="ffmpeg -i "${{file}}.h264" -c:v copy -c:a copy "${{file}}_{condition}.mp4""
+    convert_mp4_1fps="ffmpeg -i "${{file}}_{condition}.mp4" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy "${{file}}_{condition}_1fps.mp4""
+    convert_mp4_30fps_playback="ffmpeg -i "${{file}}_{condition}_1fps.mp4" -filter:v 'setpts=PTS/24' -r 24 "${{file}}_{condition}_1fps_24fps-playback.mp4""
+    remove_h264="rm "${{file}}.h264""
+    remove_mp4="${{file}}_{condition}_1fps.mp4""
 
     # Execute commands
     eval $convert_mp4
@@ -371,7 +372,6 @@ if 'c' in job:
         time.sleep(30)  # Check every 30 seconds
 
     print(f"Processing array job {process_job_id} has completed.\n")
-    '''
     
 end_processing = datetime.now()
 
