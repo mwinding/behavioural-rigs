@@ -298,7 +298,7 @@ if 'a' in job: # array-job transfer
     directory_contents = list_directory_contents(save_path)
 
     h264_files = [f"{save_path}/{file.replace('.h264', '')}" for file in directory_contents if file.endswith('.h264')]
-    h264_files_string = ' '.join(h264_files)
+    h264_files_string = '\n'.join(h264_files)
 
     if len(h264_files) == 0:
         print("No .h264 files found in the directory. Ensure the save_path is correct and contains files.")
@@ -316,9 +316,19 @@ if 'a' in job: # array-job transfer
     #SBATCH --mem=120G
     #SBATCH --time=10:00:00
 
+    # Debugging: Print environment variables
+    set -x
+
     # Convert h264_files_string to an array
-    IFS=' ' read -r -a files <<< "{h264_files_string}"
-    file="${{files[$SLURM_ARRAY_TASK_ID-1]}}"
+    IFS=$'\n' read -r -a files <<< "$(echo "{h264_files_string}" | tr ' ' '\n')"
+
+    # Debugging info
+    echo "SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
+    echo "Files array: ${files[@]}"
+
+    # Assign file based on task ID
+    file="${files[$SLURM_ARRAY_TASK_ID-1]}"
+    echo "Processing file: $file"
 
     # Commands to process each file
     convert_mp4="ffmpeg -i \"${file}.h264\" -c:v copy -c:a copy \"${file}_HCisolation.mp4\""
@@ -327,12 +337,14 @@ if 'a' in job: # array-job transfer
     remove_h264="rm \"${file}.h264\""
     remove_mp4="rm \"${file}_HCisolation_1fps.mp4\""
 
-    # Execute commands
-    eval $convert_mp4
-    eval $convert_mp4_1fps
-    eval $convert_mp4_30fps_playback
-    eval $remove_h264
-    eval $remove_mp4
+    # Execute commands with error checks
+    eval "$convert_mp4" || { echo "Failed at convert_mp4"; exit 1; }
+    eval "$convert_mp4_1fps" || { echo "Failed at convert_mp4_1fps"; exit 1; }
+    eval "$convert_mp4_30fps_playback" || { echo "Failed at convert_mp4_30fps_playback"; exit 1; }
+    eval "$remove_h264" || { echo "Failed at remove_h264"; exit 1; }
+    eval "$remove_mp4" || { echo "Failed at remove_mp4"; exit 1; }
+
+    echo "Finished processing file: $file"
     """
 
     print('sh file:')
