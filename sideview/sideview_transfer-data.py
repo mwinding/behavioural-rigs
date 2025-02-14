@@ -282,6 +282,9 @@ if 'c' in job:
     eval $remove_mp4
     """
 
+    print('sh file:')
+    print(process_script_content)
+    
     # Create a temporary file to hold the SBATCH script
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_process_script:
         tmp_process_script.write(process_script_content)
