@@ -149,7 +149,8 @@ if 't' in job:
 
 
     elif len(IPs) > 1:
-        shell_script_content = f'''#!/bin/bash
+        shell_script_content = f'''
+        #!/bin/bash
         #SBATCH --job-name=rsync_pis
         #SBATCH --ntasks=1
         #SBATCH --cpus-per-task=16
