@@ -183,16 +183,18 @@ if 't' in job:
         ssh {username}@$ip "sudo shutdown -h now"
         '''
 
-    # Create a temporary file to hold the SBATCH script
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_script:
+    # Define a specific local path to save the SBATCH script
+    local_script_path = os.path.join(save_path, "sbatch_script.sh")
+
+    # Write the SBATCH script to the specified local path
+    with open(local_script_path, "w") as tmp_script:
         tmp_script.write(shell_script_content)
-        tmp_script_path = tmp_script.name
 
     # Submit the SBATCH script
-    process = subprocess.run(["sbatch", tmp_script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.run(["sbatch", local_script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-    # Optionally, delete the temporary file after submission
-    os.unlink(tmp_script_path)
+    # Optionally, delete the file after submission
+    #os.remove(local_script_path)
 
     # Check the result and extract job ID from the output
     if process.returncode == 0:
