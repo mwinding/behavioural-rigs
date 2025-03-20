@@ -115,36 +115,36 @@ if 't' in job:
 
     if len(IPs) == 1:
         shell_script_content = f'''#!/bin/bash
-        #SBATCH --job-name=rsync_pis
-        #SBATCH --ntasks=1
-        #SBATCH --cpus-per-task=16
-        #SBATCH --partition=ncpu
-        #SBATCH --mem=120G
-        #SBATCH --time=20:00:00
+#SBATCH --job-name=rsync_pis
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --partition=ncpu
+#SBATCH --mem=120G
+#SBATCH --time=20:00:00
 
-        # Single IP setup
-        IFS=' ' read -r -a ip_array <<< "{IPs_string}"
-        IFS=' ' read -r -a rig_array <<< "{rigs_string}"
+# Single IP setup
+IFS=' ' read -r -a ip_array <<< "{IPs_string}"
+IFS=' ' read -r -a rig_array <<< "{rigs_string}"
 
-        # Directly assign the single IP and rig
-        ip="${{ip_array[0]}}"
-        rig="${{rig_array[0]}}"
+# Directly assign the single IP and rig
+ip="${{ip_array[0]}}"
+rig="${{rig_array[0]}}"
 
-        echo "Job started at: $(date)"
-        echo "Using IP: $ip and Rig: $rig"
+echo "Job started at: $(date)"
+echo "Using IP: $ip and Rig: $rig"
 
-        # rsync using the single IP address
-        rsync -avzhP {username}@$ip:/home/{username}/data/ {save_path}
-        rsync -avzhP {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
-        rsync_status=$?
+# rsync using the single IP address
+rsync -avzhP {username}@$ip:/home/{username}/data/ {save_path}
+rsync -avzhP {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
+rsync_status=$?
 
-        # Check rsync status and output file if it fails
-        if [ $rsync_status -ne 0 ]; then
-            echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
-        fi
+# Check rsync status and output file if it fails
+if [ $rsync_status -ne 0 ]; then
+    echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
+fi
 
-        ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
-        ssh {username}@$ip "sudo shutdown -h now"
+ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
+ssh {username}@$ip "sudo shutdown -h now"
         '''
 
 
@@ -183,18 +183,16 @@ ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
 ssh {username}@$ip "sudo shutdown -h now"
         '''
 
-    # Define a specific local path to save the SBATCH script
-    local_script_path = os.path.join(save_path, "sbatch_script.sh")
-
-    # Write the SBATCH script to the specified local path
-    with open(local_script_path, "w") as tmp_script:
+    # Create a temporary file to hold the SBATCH script
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_script:
         tmp_script.write(shell_script_content)
+        tmp_script_path = tmp_script.name
 
     # Submit the SBATCH script
-    process = subprocess.run(["sbatch", local_script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.run(["sbatch", tmp_script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-    # Optionally, delete the file after submission
-    #os.remove(local_script_path)
+    # Optionally, delete the temporary file after submission
+    os.unlink(tmp_script_path)
 
     # Check the result and extract job ID from the output
     if process.returncode == 0:
@@ -312,40 +310,40 @@ if 'a' in job: # array-job transfer
 
     # Array job script for processing each .h264 file
     process_script_content = f"""#!/bin/bash
-    #SBATCH --job-name=sv_process
-    #SBATCH --ntasks=1
-    #SBATCH --cpus-per-task=32
-    #SBATCH --array=1-{len(h264_files)}
-    #SBATCH --partition=ncpu
-    #SBATCH --mem=120G
-    #SBATCH --time=10:00:00
+#SBATCH --job-name=sv_process
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --array=1-{len(h264_files)}
+#SBATCH --partition=ncpu
+#SBATCH --mem=120G
+#SBATCH --time=10:00:00
 
-    # Convert h264_files_string to an array
-    IFS=$'\n' read -r -a files <<< "$(echo "{h264_files_string}" | tr ' ' '\n')"
+# Convert h264_files_string to an array
+IFS=$'\n' read -r -a files <<< "$(echo "{h264_files_string}" | tr ' ' '\n')"
 
-    # Debugging info
-    echo 'SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID'
-    echo 'Files array: ${{files[@]}}'
+# Debugging info
+echo 'SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID'
+echo 'Files array: ${{files[@]}}'
 
-    # Assign file based on task ID
-    file="${{files[$SLURM_ARRAY_TASK_ID-1]}}"
-    echo "Processing file: $file"
+# Assign file based on task ID
+file="${{files[$SLURM_ARRAY_TASK_ID-1]}}"
+echo "Processing file: $file"
 
-    # Commands to process each file
-    convert_mp4="ffmpeg -i \"${{file}}.h264\" -c:v copy -c:a copy \"${{file}}_{condition}.mp4\""
-    convert_mp4_1fps="ffmpeg -i \"${{file}}_{condition}.mp4\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \"${{file}}_{condition}_1fps.mp4\""
-    convert_mp4_30fps_playback="ffmpeg -i \"${{file}}_{condition}_1fps.mp4\" -filter:v 'setpts=PTS/24' -r 24 \"${{file}}_{condition}_1fps_24fps-playback.mp4\""
-    remove_h264="rm \"${{file}}.h264\""
-    remove_mp4="rm \"${{file}}_{condition}_1fps.mp4\""
+# Commands to process each file
+convert_mp4="ffmpeg -i \"${{file}}.h264\" -c:v copy -c:a copy \"${{file}}_{condition}.mp4\""
+convert_mp4_1fps="ffmpeg -i \"${{file}}_{condition}.mp4\" -vf 'fps=1' -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a copy \"${{file}}_{condition}_1fps.mp4\""
+convert_mp4_30fps_playback="ffmpeg -i \"${{file}}_{condition}_1fps.mp4\" -filter:v 'setpts=PTS/24' -r 24 \"${{file}}_{condition}_1fps_24fps-playback.mp4\""
+remove_h264="rm \"${{file}}.h264\""
+remove_mp4="rm \"${{file}}_{condition}_1fps.mp4\""
 
-    # Execute commands with error checks
-    eval "$convert_mp4" || {{ echo "Failed at convert_mp4"; exit 1; }}
-    eval "$convert_mp4_1fps" || {{ echo "Failed at convert_mp4_1fps"; exit 1; }}
-    eval "$convert_mp4_30fps_playback" || {{ echo "Failed at convert_mp4_30fps_playback"; exit 1; }}
-    eval "$remove_h264" || {{ echo "Failed at remove_h264"; exit 1; }}
-    eval "$remove_mp4" || {{ echo "Failed at remove_mp4"; exit 1; }}
+# Execute commands with error checks
+eval "$convert_mp4" || {{ echo "Failed at convert_mp4"; exit 1; }}
+eval "$convert_mp4_1fps" || {{ echo "Failed at convert_mp4_1fps"; exit 1; }}
+eval "$convert_mp4_30fps_playback" || {{ echo "Failed at convert_mp4_30fps_playback"; exit 1; }}
+eval "$remove_h264" || {{ echo "Failed at remove_h264"; exit 1; }}
+eval "$remove_mp4" || {{ echo "Failed at remove_mp4"; exit 1; }}
 
-    echo "Finished processing file: $file"
+echo "Finished processing file: $file"
     """
 
     print('sh file:')
