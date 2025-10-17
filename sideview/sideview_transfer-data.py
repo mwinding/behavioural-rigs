@@ -134,8 +134,8 @@ echo "Job started at: $(date)"
 echo "Using IP: $ip and Rig: $rig"
 
 # rsync using the single IP address
-rsync -vzhP {username}@$ip:/home/{username}/data/ {save_path}
-rsync -vzhP {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
+rsync -rltvhz --progress --no-perms --no-owner --no-group {username}@$ip:/home/{username}/data/ {save_path}
+rsync -rltvhz --progress --no-perms --no-owner --no-group {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
 rsync_status=$?
 
 # Check rsync status and output file if it fails
@@ -170,8 +170,8 @@ echo "Job started at: $(date)"
 echo "Using IP: $ip and Rig: $rig"
 
 # rsync using the IP address for this task
-rsync -vzh --progress {username}@$ip:/home/{username}/data/ {save_path}
-rsync -vzh --progress {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
+rsync -rltvhz --progress --no-perms --no-owner --no-group {username}@$ip:/home/{username}/data/ {save_path}
+rsync -rltvhz --progress --no-perms --no-owner --no-group {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
 rsync_status=$?
 
 # Check rsync status and output file if it fails
