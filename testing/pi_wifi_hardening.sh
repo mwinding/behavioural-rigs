@@ -11,10 +11,13 @@ set -euo pipefail
 #   -> e.g. -out failed_rounds.csv => failed_rounds-YYYYmmdd-HHMMSS.csv
 #   Columns: rig_number,IP_address,error
 # - Supports -pw PASSWORD via sshpass (insecure). Prefer SSH keys if possible.
+# - Generates wpa_supplicant.conf WITHOUT a bssid line unless -b is provided.
+# - Installs: (1) cron keepalive ping, (2) power-save-off systemd service,
+#             (3) Wi-Fi watchdog script + cron (every 2 minutes).
 
 USER="pi"
 PORT=22
-BSSID=""
+BSSID=""              # leave empty by default; only used if -b is supplied
 FORCED_GW=""
 PASSWORD=""
 USE_SSHPASS=0
@@ -33,7 +36,7 @@ Usage: $0 [flags] [-csv FILE] [-ip IP[,IP2...]]... [IP ...]
 Flags:
   -u USER       SSH user (default: pi)
   -p PORT       SSH port (default: 22)
-  -b BSSID      BSSID to lock onto (default: 74:9e:75:29:b6:00)
+  -b BSSID      BSSID to lock onto (optional; if omitted, no lock is written)
   -g GATEWAY    Force keepalive gateway IP (optional)
   -pw PASS      Password for SSH and sudo (uses sshpass; insecure)
   -csv FILE     CSV with header 'IP_address' (case-insensitive); optional 'rig_number'
@@ -148,7 +151,7 @@ if [[ $USE_SSHPASS -eq 1 ]]; then
   command -v sshpass >/dev/null 2>&1 || { echo "ERROR: sshpass not found (install it to use -pw)" >&2; exit 1; }
 fi
 
-# Build local wpa_supplicant.conf once
+# Build local wpa_supplicant.conf once (conditionally include bssid line)
 TMPCONF="$(mktemp)"
 trap 'rm -f "$TMPCONF"' EXIT
 cat > "$TMPCONF" <<EOF
@@ -207,20 +210,11 @@ if [ -z "$GW" ]; then
 fi
 [ -z "$GW" ] && { echo "NO_GATEWAY"; exit 3; }
 
-# Install cron keepalive (dedupe)
+# Install cron keepalive ping (dedupe)
 TMPCRON="$(mktemp)"
 crontab -l 2>/dev/null > "$TMPCRON" || true
 sed -i '\''/ping -c 1 -W 1 .* > \/dev\/null 2>&1/d'\'' "$TMPCRON"
 echo "*/5 * * * * ping -c 1 -W 1 $GW > /dev/null 2>&1" >> "$TMPCRON"
-crontab "$TMPCRON"
-rm -f "$TMPCRON"
-
-# Install Wi-Fi link watchdog (dedupe)
-TMPCRON="$(mktemp)"
-crontab -l 2>/dev/null > "$TMPCRON" || true
-# Remove any previous watchdog line
-sed -i '/iw dev wlan0 link | grep -q "Connected"/d' "$TMPCRON"
-echo "*/2 * * * * /sbin/iw dev wlan0 link | grep -q \"Connected\" || /sbin/systemctl restart wpa_supplicant" >> "$TMPCRON"
 crontab "$TMPCRON"
 rm -f "$TMPCRON"
 
@@ -249,6 +243,41 @@ else
   sudo systemctl daemon-reload
   sudo systemctl enable --now wifi-powersave-off.service || true
 fi
+
+# Wi-Fi watchdog script (avoids fragile cron one-liners with pipes)
+cat > /tmp/wifi-watchdog.sh <<'"'"'WSH'"'"'
+#!/bin/sh
+set -eu
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+IFACE="$(iw dev 2>/dev/null | awk "/Interface/ {print \$2; exit}")"
+[ -z "${IFACE:-}" ] && exit 0
+if ! iw dev "$IFACE" link | grep -q "Connected"; then
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl restart wpa_supplicant || true
+  else
+    # Fallback for very old systems
+    if pidof wpa_supplicant >/dev/null 2>&1; then
+      killall wpa_supplicant || true
+    fi
+    nohup wpa_supplicant -B -i "$IFACE" -c /etc/wpa_supplicant/wpa_supplicant.conf >/dev/null 2>&1 || true
+  fi
+fi
+WSH
+
+if [ -n "${PASSWORD:-}" ]; then
+  printf "%s\n" "$PASSWORD" | sudo -S install -m 755 /tmp/wifi-watchdog.sh /usr/local/sbin/wifi-watchdog.sh
+else
+  sudo install -m 755 /tmp/wifi-watchdog.sh /usr/local/sbin/wifi-watchdog.sh
+fi
+rm -f /tmp/wifi-watchdog.sh
+
+# Add/refresh watchdog cron entry (dedupe)
+TMPCRON="$(mktemp)"
+crontab -l 2>/dev/null > "$TMPCRON" || true
+sed -i '\''/\/usr\/local\/sbin\/wifi-watchdog\.sh/d'\'' "$TMPCRON"
+echo "*/2 * * * * /usr/local/sbin/wifi-watchdog.sh" >> "$TMPCRON"
+crontab "$TMPCRON"
+rm -f "$TMPCRON"
 
 iw "$WIFACE" get power_save || true
 echo "OK_DONE"
@@ -292,7 +321,7 @@ process_host() {
       echo "NO_WIFI_GATEWAY"
     else
       # Return last lines to help debugging
-      echo "REMOTE_FAIL:$(echo "$out" | tail -n 5 | tr '\n' ' ' | sed 's/\"/\"\"/g')"
+      echo "REMOTE_FAIL:$(echo "$out" | tail -n 5 | tr $'\n' ' ' | sed 's/\"/\"\"/g')"
     fi
   else
     if grep -q "OK_DONE" <<<"$out"; then
@@ -319,7 +348,7 @@ for (( round=1; round<=rounds; round++ )); do
     status="$(process_host "$ip")"
     if [[ "$status" == "OK" ]]; then
       echo "  [PASS]"
-      unset last_error["$ip"] || true
+      unset 'last_error["$ip"]' || true
     else
       echo "  [FAIL] ${status}"
       last_error["$ip"]="$status"
