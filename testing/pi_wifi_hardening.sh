@@ -14,7 +14,7 @@ set -euo pipefail
 
 USER="pi"
 PORT=22
-BSSID="74:9e:75:29:b6:00"
+BSSID=""
 FORCED_GW=""
 PASSWORD=""
 USE_SSHPASS=0
@@ -158,7 +158,7 @@ country=GB
 
 network={
         ssid="${SSID}"
-        bssid=${BSSID}
+$( [[ -n "${BSSID}" ]] && echo "        bssid=${BSSID}" )
         psk=${PSK_HEX}
         scan_ssid=1
         bgscan=""
@@ -212,6 +212,15 @@ TMPCRON="$(mktemp)"
 crontab -l 2>/dev/null > "$TMPCRON" || true
 sed -i '\''/ping -c 1 -W 1 .* > \/dev\/null 2>&1/d'\'' "$TMPCRON"
 echo "*/5 * * * * ping -c 1 -W 1 $GW > /dev/null 2>&1" >> "$TMPCRON"
+crontab "$TMPCRON"
+rm -f "$TMPCRON"
+
+# Install Wi-Fi link watchdog (dedupe)
+TMPCRON="$(mktemp)"
+crontab -l 2>/dev/null > "$TMPCRON" || true
+# Remove any previous watchdog line
+sed -i '/iw dev wlan0 link | grep -q "Connected"/d' "$TMPCRON"
+echo "*/2 * * * * /sbin/iw dev wlan0 link | grep -q \"Connected\" || /sbin/systemctl restart wpa_supplicant" >> "$TMPCRON"
 crontab "$TMPCRON"
 rm -f "$TMPCRON"
 
