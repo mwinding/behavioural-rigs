@@ -13,7 +13,8 @@ set -euo pipefail
 # - Supports -pw PASSWORD via sshpass (insecure). Prefer SSH keys if possible.
 # - Generates wpa_supplicant.conf WITHOUT a bssid line unless -b is provided.
 # - Installs: (1) cron keepalive ping, (2) power-save-off systemd service,
-#             (3) Wi-Fi watchdog script + cron (every 2 minutes).
+#             (3) Wi-Fi watchdog script + cron (every 2 minutes),
+#             (4) set correct time upon boot via cron.
 
 USER="pi"
 PORT=22
@@ -279,9 +280,39 @@ echo "*/2 * * * * /usr/local/sbin/wifi-watchdog.sh" >> "$TMPCRON"
 crontab "$TMPCRON"
 rm -f "$TMPCRON"
 
+
+# Wi-Fi time sync script (sets correct time upon boot)
+## Disable NTP service to allow manual time setting (NTP would be the better solution if it was installed on nemo)
+echo "  [INFO] Stopping systemd-timesyncd..."
+if [ -n "${PASSWORD:-}" ]; then
+  printf "%s\n" "$PASSWORD" | sudo -S systemctl stop systemd-timesyncd || true
+else
+  sudo systemctl stop systemd-timesyncd || true
+fi
+## sets correct time upon boot via SSH
+echo "  [INFO] Installing @reboot cron job to set time from login.nemo.thecrick.org..."
+TMPCRON="$(mktemp)"
+crontab -l 2>/dev/null > "$TMPCRON" || true
+# Remove any old version of this command
+sed -i '\''/@reboot.*login.nemo.thecrick.org/d'\'' "$TMPCRON"
+sed -i '\''/@reboot.*ssh_set_time.sh/d'\'' "$TMPCRON"
+# Define the full command to run
+# 1. Sleep for 30s to wait for network
+# 2. Stop NTP service so it doesnt override us
+# 3. Get time via SSH and set it with date
+SSH_TARGET="svc-windingm-pi@login.nemo.thecrick.org"
+SSH_CMD="/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_TARGET date"
+SET_TIME_CMD="@reboot (sleep 30 && sudo systemctl stop systemd-timesyncd && sudo date -s \"\$($SSH_CMD)\") > /tmp/ssh_set_time.log 2>&1"
+# Add the new @reboot command
+echo "$SET_TIME_CMD" >> "$TMPCRON"
+crontab "$TMPCRON"
+rm -f "$TMPCRON"
+
+
 iw "$WIFACE" get power_save || true
 echo "OK_DONE"
 '
+
 
 # Helpers
 upload_conf() {
