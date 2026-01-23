@@ -64,7 +64,7 @@ for i in range(num_captures):
 
     if(focus_in_loop==True):
         success = picam2.autofocus_cycle() # auto-focus before each interval/capture
-
+        
     # acquire image
     r = picam2.capture_request()
     r.save("main", f"data/{now}_{rig_name}_{experiment_name}/{now}_{rig_name}_{experiment_name}_image{str(i).zfill(5)}.jpg")
@@ -75,6 +75,10 @@ for i in range(num_captures):
     print(f"Captured image {i} of {num_captures} at {elapsed_time:.2f}s")
 
     r.release()
+
+    # initial autofocus for first two captures if focus_in_loop is False
+    if(i==0 | i==1):
+        success = picam2.autofocus_cycle() # auto-focus before each interval/capture
 
     # Calculate the expected time for the next capture
     expected_next_capture_time = (i + 1) * interval
