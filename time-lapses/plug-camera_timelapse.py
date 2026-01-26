@@ -16,7 +16,7 @@ import subprocess
 duration = 518400 # total time of timelapse, in seconds
 interval = 600 # time between acquisitions, in seconds
 experiment_name ='exp' # will create a folder with this name
-focus_in_loop = False # do you autofocus before each capture, probably won't work for <3s intervals
+focus_in_loop = True # do you autofocus before each capture, probably won't work for <3s intervals
 current_time = ''
 
 # pulling user-input variables from command line
@@ -61,9 +61,6 @@ start_time = time.time()
 
 capture_times = []
 for i in range(num_captures):
-
-    if(focus_in_loop==True):
-        success = picam2.autofocus_cycle() # auto-focus before each interval/capture
         
     # acquire image
     r = picam2.capture_request()
@@ -78,6 +75,9 @@ for i in range(num_captures):
 
     # initial autofocus for first two captures if focus_in_loop is False
     if(i==0 | i==1):
+        success = picam2.autofocus_cycle() # auto-focus before each interval/capture
+
+    if(focus_in_loop==True):
         success = picam2.autofocus_cycle() # auto-focus before each interval/capture
 
     # Calculate the expected time for the next capture
