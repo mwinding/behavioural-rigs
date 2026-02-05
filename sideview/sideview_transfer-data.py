@@ -133,17 +133,26 @@ rig="${{rig_array[0]}}"
 echo "Job started at: $(date)"
 echo "Using IP: $ip and Rig: $rig"
 
-# rsync using the single IP address
-rsync -rltvhz --progress --no-perms --no-owner --no-group {username}@$ip:/home/{username}/data/ {save_path}
-rsync -rltvhz --progress --no-perms --no-owner --no-group {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
-rsync_status=$?
+rsync -rlhzt -O --progress --no-perms --no-owner --no-group --delay-updates --partial \
+  {username}@$ip:/home/{username}/data/ "{save_path}/"
+s1=$?
 
-# Check rsync status and output file if it fails
-if [ $rsync_status -ne 0 ]; then
-    echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
+verify_out=$(rsync -rlhzt -O --dry-run --itemize-changes --out-format="%i %n%L" --no-perms --no-owner --no-group \
+  {username}@$ip:/home/{username}/data/ "{save_path}/"
+)
+s2=$?
+
+if [ $s1 -ne 0 ] || [ $s2 -ne 0 ] || [ -n "$verify_out" ]; then
+    echo "Rsync/verify failed for IP: $ip (transfer=$s1 verify=$s2) — NOT shutting down" \
+      > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
+    exit 1
 fi
 
-ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
+if [ "{remove_files}" = "True" ]; then
+    ssh {username}@$ip "find data/ -type f -mindepth 1 -delete"
+    ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
+fi
+
 ssh {username}@$ip "sudo shutdown -h now"
         '''
 
@@ -169,17 +178,26 @@ rig="${{rig_array[$SLURM_ARRAY_TASK_ID-1]}}"
 echo "Job started at: $(date)"
 echo "Using IP: $ip and Rig: $rig"
 
-# rsync using the IP address for this task
-rsync -rltvhz --progress --no-perms --no-owner --no-group {username}@$ip:/home/{username}/data/ {save_path}
-rsync -rltvhz --progress --no-perms --no-owner --no-group {remove_files_option}{username}@$ip:/home/{username}/data/ {save_path}
-rsync_status=$?
+rsync -rlhzt -O --progress --no-perms --no-owner --no-group --delay-updates --partial \
+  {username}@$ip:/home/{username}/data/ "{save_path}/"
+s1=$?
 
-# Check rsync status and output file if it fails
-if [ $rsync_status -ne 0 ]; then
-    echo "Rsync failed for IP: $ip" > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
+verify_out=$(rsync -rlhzt -O --dry-run --itemize-changes --out-format="%i %n%L" --no-perms --no-owner --no-group \
+  {username}@$ip:/home/{username}/data/ "{save_path}/"
+)
+s2=$?
+
+if [ $s1 -ne 0 ] || [ $s2 -ne 0 ] || [ -n "$verify_out" ]; then
+    echo "Rsync/verify failed for IP: $ip (transfer=$s1 verify=$s2) — NOT shutting down" \
+      > "FAILED-rsync_{experiment_name_base}_${{rig}}_IP-${{ip}}.out"
+    exit 1
 fi
 
-ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
+if [ "{remove_files}" = "True" ]; then
+    ssh {username}@$ip "find data/ -type f -mindepth 1 -delete"
+    ssh {username}@$ip "find data/ -mindepth 1 -type d -empty -delete"
+fi
+
 ssh {username}@$ip "sudo shutdown -h now"
         '''
 
