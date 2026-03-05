@@ -106,6 +106,9 @@ print(f'{frac_connected*100:.1f}% of IPs worked\n')
 print('RUNNING TIMELAPSES...')
 timings = ['']*len(IPs)
 for i, IP in enumerate(IPs):
+
+    rig_name = f'pc{rig_num[i]}'
+    
     try:
         print(f'Ran command on {rig_num[i]} [{IP}]')
 
