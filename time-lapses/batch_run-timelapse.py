@@ -126,7 +126,7 @@ for i, IP in enumerate(IPs):
 
         # delete any old log files
         delete_log = f'sshpass -p {password} ssh {username}@{IP} "rm -f python.log"'
-        subprocess.run(delete_log, shell=True, check=True)
+        subprocess.run(delete_log, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         #print(f'Time is now {result.stdout}')
 
@@ -144,7 +144,8 @@ for i, IP in enumerate(IPs):
         time.sleep(sleep_time)
 
     except subprocess.CalledProcessError as e:
-        print(f"Script failed on {rig_name} [{IP}] with error: {e.stderr.decode()}")
+        err = e.stderr.decode(errors='replace').strip() if e.stderr else str(e)
+        print(f"Script failed on {rig_name} [{IP}] with error: {err}")
     except Exception as e:
         print(f"An error occurred on {rig_name} [{IP}]: {e}")
     except:
@@ -177,7 +178,8 @@ for i, IP in enumerate(IPs):
             print('')
 
     except subprocess.CalledProcessError as e:
-        print(f"Script failed on {rig_name} [{IP}] with error: {e.stderr.decode()}")
+        err = e.stderr.decode(errors='replace').strip() if e.stderr else str(e)
+        print(f"Script failed on {rig_name} [{IP}] with error: {err}")
     except Exception as e:
         print(f"An error occurred on {rig_name} [{IP}]: {e}")
     except:
