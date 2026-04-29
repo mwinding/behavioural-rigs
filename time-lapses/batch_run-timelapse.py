@@ -3,6 +3,7 @@
 # Optional retries will rerun only rigs whose acquisition did not start,
 # restarting those RPis and waiting before each retry.
 # If any attempt fails, a failure-history CSV is written to the save folder.
+# If rigs still fail at the end, a final-failures CSV is also written.
 
 # You will need to install `sshpass`. If using macOS, run the following commands to 1) install homebrew and then 2) install sshpass:
 #  1. /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -42,7 +43,7 @@ reboot_wait = 120
 parser = argparse.ArgumentParser(description='Batch SSH test, requires SSH password, path of IP addresses to test, and a save path for the connectivity data')
 parser.add_argument('-p', '--ssh-password', type=str, required=True, help='SSH password')
 parser.add_argument('-ip', '--ip_path', type=str, required=True, help='The path to a CSV containing all IP_addresses')
-parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, required=True, default=[], help='list of rig names')
+parser.add_argument('-l', '--list-of-rig-names', nargs='+', type=int, required=False, default=[], help='list of rig names')
 parser.add_argument('-s', '--save-path', type=str, default=save_path, help='The path to save folder for SSH connectivity data')
 parser.add_argument('-t', '--timeout', type=int, default=timeout, help='Number of seconds to attempt SSH connection')
 parser.add_argument('-u', '--username', type=str, default=username, help='username for SSH attempts')
@@ -132,10 +133,6 @@ def format_subprocess_error(e):
     out = e.stdout.decode(errors='replace').strip() if e.stdout else ''
     return (err or out or str(e)).replace('\n', ' | ')
 
-def get_log_excerpt(log_text, max_lines=20):
-    lines = log_text.splitlines()
-    return '\n'.join(lines[-max_lines:])
-
 def read_python_log(IP):
     try:
         check_result = run_remote(IP, 'cat python.log')
@@ -157,7 +154,7 @@ def add_failure(i, attempt, error, log_text=''):
         attempt,
         error,
         experiment_folder,
-        get_log_excerpt(log_text)
+        log_text
     ])
 
 def launch_timelapse(i, attempt):
@@ -294,12 +291,20 @@ for attempt in range(1, rounds + 1):
 print('')
 
 if len(failure_history) > 0:
-    failures = pd.DataFrame(failure_history, columns=['rig_number', 'IP_address', 'attempt', 'error', 'experiment_folder', 'log_excerpt'])
+    failures = pd.DataFrame(failure_history, columns=['rig_number', 'IP_address', 'attempt', 'error', 'experiment_folder', 'log'])
     failure_path = f'{save_path}/{batch_start}_timelapse-failure-history.csv'
     failures.to_csv(failure_path, index=0)
     print(f'Failure history written to: {failure_path}')
 
 if len(to_process) > 0:
+    final_failures = []
+    for i in to_process:
+        final_failures.append([rig_num[i], IPs[i]])
+    final_failures = pd.DataFrame(final_failures, columns=['rig_number', 'IP_address'])
+    final_failure_path = f'{save_path}/{batch_start}_timelapse-final-failures.csv'
+    final_failures.to_csv(final_failure_path, index=0)
+
     print(f'{len(to_process)} rig(s) still failed after {rounds} attempt(s).')
+    print(f'Final failures written to: {final_failure_path}')
 else:
     print(f'All timelapses started successfully after up to {rounds} attempt(s).')
