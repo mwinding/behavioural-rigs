@@ -108,10 +108,10 @@ logfile2 = '/var/log/kern.log.1'
 print(f'clearing log files: {logfile1}, {logfile2}')
 
 ssh_command1 = f'sudo rm {logfile1}'
-run_command(ssh_command, rig_name)
+run_command(ssh_command1, rig_name)
 
 ssh_command2 = f'sudo rm {logfile2}'
-run_command(ssh_command, rig_name)
+run_command(ssh_command2, rig_name)
 
 # restarting RPi
 print(f'restarting {rig_name}')
