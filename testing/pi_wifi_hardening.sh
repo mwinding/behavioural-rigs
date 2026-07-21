@@ -4,7 +4,8 @@ set -euo pipefail
 # pi_wifi_hardening.sh — CSV + batch retries + timestamped failures + rig_number passthrough
 #
 # - Reads IPs/hosts from -csv FILE (must include header 'IP_address'; case-insensitive)
-# - Also reads optional 'rig_number' and preserves it in failures CSV
+# - Also reads optional 'rig_number', 'username', and 'password'
+#   * username/password override -u/-pw for that row; blanks use the defaults
 # - Accepts -ip IP[,IP2...] (repeatable) and positional IPs; all merged and deduped
 # - Runs in rounds: 1 full pass; then retries only failures up to --retries N
 # - Writes failures to a TIMESTAMPED CSV derived from -out (default base: failures.csv)
@@ -40,7 +41,8 @@ Flags:
   -b BSSID      BSSID to lock onto (optional; if omitted, no lock is written)
   -g GATEWAY    Force keepalive gateway IP (optional)
   -pw PASS      Password for SSH and sudo (uses sshpass; insecure)
-  -csv FILE     CSV with header 'IP_address' (case-insensitive); optional 'rig_number'
+  -csv FILE     CSV with header 'IP_address' (case-insensitive);
+                optional 'rig_number', 'username', 'password'
   -out FILE     Base name for failures CSV (timestamp appended; default: failures.csv)
   --retries N   After first full pass, retry failures up to N more rounds (default: 0)
   -ip IP        One or more IPs/hosts (repeatable or comma-separated)
@@ -85,18 +87,23 @@ if ! [[ "$RETRIES" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
-# Mapping from IP -> rig_number (blank if unknown)
+# Mapping from IP -> metadata/credentials (blank if unknown)
 declare -A RIG_BY_IP
+declare -A USER_BY_IP
+declare -A PASSWORD_BY_IP
 
-# If -csv, extract IPs and rig_numbers using Python csv (robust header handling)
+# If -csv, extract IPs, rig_numbers, and optional per-host credentials using Python csv.
 if [[ -n "$CSV_IN" ]]; then
   [[ -f "$CSV_IN" ]] || { echo "ERROR: CSV not found: $CSV_IN" >&2; exit 1; }
-  # Output lines as: IP<TAB>RIG
+  # Output lines as: IP<US>RIG<US>USER<US>PASSWORD
   mapfile -t csv_pairs < <(python3 - "$CSV_IN" <<'PY'
 import sys, csv
 fn = sys.argv[1]
+sep = "\x1f"
 want_ip = "ip_address"
 opt_rig = "rig_number"
+opt_user = "username"
+opt_password = "password"
 with open(fn, newline='') as f:
     r = csv.reader(f)
     try:
@@ -110,12 +117,16 @@ with open(fn, newline='') as f:
         sys.exit(2)
     idx_ip = heads.index(want_ip)
     idx_rig = heads.index(opt_rig) if opt_rig in heads else None
+    idx_user = heads.index(opt_user) if opt_user in heads else None
+    idx_password = heads.index(opt_password) if opt_password in heads else None
     for row in r:
         ip = row[idx_ip].strip() if idx_ip < len(row) else ""
         if not ip or ip.startswith("#"):
             continue
         rig = row[idx_rig].strip() if (idx_rig is not None and idx_rig < len(row)) else ""
-        print(ip + "\t" + rig)
+        user = row[idx_user].strip() if (idx_user is not None and idx_user < len(row)) else ""
+        password = row[idx_password].strip() if (idx_password is not None and idx_password < len(row)) else ""
+        print(sep.join([ip, rig, user, password]))
 PY
 )
   pyrc=$?
@@ -129,10 +140,11 @@ PY
 
   # Fill IPS and RIG_BY_IP from csv_pairs
   for line in "${csv_pairs[@]:-}"; do
-    ip="${line%%$'\t'*}"
-    rig="${line#*$'\t'}"
+    IFS=$'\x1f' read -r ip rig ssh_user ssh_password <<< "$line"
     IPS+=("$ip")
     RIG_BY_IP["$ip"]="$rig"
+    USER_BY_IP["$ip"]="$ssh_user"
+    PASSWORD_BY_IP["$ip"]="$ssh_password"
   done
 fi
 
@@ -147,7 +159,13 @@ done
 IPS=("${unique[@]}")
 [[ ${#IPS[@]} -eq 0 ]] && { echo "ERROR: no hosts to process" >&2; usage; }
 
-# If -pw is used, ensure sshpass exists
+# If any host uses a password, ensure sshpass exists.
+for ip in "${IPS[@]}"; do
+  if [[ -n "${PASSWORD_BY_IP[$ip]:-$PASSWORD}" ]]; then
+    USE_SSHPASS=1
+    break
+  fi
+done
 if [[ $USE_SSHPASS -eq 1 ]]; then
   command -v sshpass >/dev/null 2>&1 || { echo "ERROR: sshpass not found (install it to use -pw)" >&2; exit 1; }
 fi
@@ -315,22 +333,46 @@ echo "OK_DONE"
 
 
 # Helpers
+credential_user_for() {
+  local ip="$1"
+  printf "%s" "${USER_BY_IP[$ip]:-$USER}"
+}
+
+credential_password_for() {
+  local ip="$1"
+  printf "%s" "${PASSWORD_BY_IP[$ip]:-$PASSWORD}"
+}
+
+shell_quote() {
+  printf "'"
+  printf "%s" "$1" | sed "s/'/'\\\\''/g"
+  printf "'"
+}
+
 upload_conf() {
   local ip="$1"
-  if [[ $USE_SSHPASS -eq 1 ]]; then
-    sshpass -p "$PASSWORD" scp -o StrictHostKeyChecking=no -P "$PORT" "$TMPCONF" "${USER}@${ip}:/tmp/wpa_supplicant.conf"
+  local ssh_user ssh_password
+  ssh_user="$(credential_user_for "$ip")"
+  ssh_password="$(credential_password_for "$ip")"
+  if [[ -n "$ssh_password" ]]; then
+    sshpass -p "$ssh_password" scp -o StrictHostKeyChecking=no -P "$PORT" "$TMPCONF" "${ssh_user}@${ip}:/tmp/wpa_supplicant.conf"
   else
-    scp -P "$PORT" "$TMPCONF" "${USER}@${ip}:/tmp/wpa_supplicant.conf"
+    scp -P "$PORT" "$TMPCONF" "${ssh_user}@${ip}:/tmp/wpa_supplicant.conf"
   fi
 }
 
 run_remote() {
   local ip="$1"
-  if [[ $USE_SSHPASS -eq 1 ]]; then
-    sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -p "$PORT" "${USER}@${ip}" \
-      "PASSWORD='${PASSWORD}' FORCED_GW='${FORCED_GW}' bash -s" <<< "$REMOTE_PAYLOAD"
+  local ssh_user ssh_password remote_cmd
+  ssh_user="$(credential_user_for "$ip")"
+  ssh_password="$(credential_password_for "$ip")"
+  if [[ -n "$ssh_password" ]]; then
+    remote_cmd="PASSWORD=$(shell_quote "$ssh_password") FORCED_GW=$(shell_quote "$FORCED_GW") bash -s"
+    sshpass -p "$ssh_password" ssh -o StrictHostKeyChecking=no -p "$PORT" "${ssh_user}@${ip}" \
+      "$remote_cmd" <<< "$REMOTE_PAYLOAD"
   else
-    ssh -p "$PORT" "${USER}@${ip}" "FORCED_GW='${FORCED_GW}' bash -s" <<< "$REMOTE_PAYLOAD"
+    remote_cmd="FORCED_GW=$(shell_quote "$FORCED_GW") bash -s"
+    ssh -p "$PORT" "${ssh_user}@${ip}" "$remote_cmd" <<< "$REMOTE_PAYLOAD"
   fi
 }
 
@@ -375,7 +417,7 @@ for (( round=1; round<=rounds; round++ )); do
   next_fail=()
 
   for ip in "${to_process[@]}"; do
-    echo "---- ${USER}@${ip} ----"
+    echo "---- $(credential_user_for "$ip")@${ip} ----"
     status="$(process_host "$ip")"
     if [[ "$status" == "OK" ]]; then
       echo "  [PASS]"
